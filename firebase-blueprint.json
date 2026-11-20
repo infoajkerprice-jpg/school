@@ -1,0 +1,742 @@
+{
+  "entities": {
+    "SiteSettings": {
+      "title": "Institution Website Settings",
+      "description": "Global school identity, bilingual names, academic mediums, classes, shifts, Islamic programs, history, mission, principal speech, and contact info managed by Admin.",
+      "type": "object",
+      "properties": {
+        "schoolNameBn": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "schoolNameEn": { "type": "string", "maxLength": 180 },
+        "schoolSubtitleBn": { "type": "string", "maxLength": 180 },
+        "logoUrl": { "type": "string", "maxLength": 500 },
+        "eiin": { "type": "string", "maxLength": 30 },
+        "schoolCode": { "type": "string", "maxLength": 30 },
+        "regNo": { "type": "string", "maxLength": 40 },
+        "establishedYear": { "type": "string", "maxLength": 20 },
+        "aboutTitle": { "type": "string", "maxLength": 140 },
+        "aboutText": { "type": "string", "maxLength": 4000 },
+        "historyText": { "type": "string", "maxLength": 4000 },
+        "missionText": { "type": "string", "maxLength": 4000 },
+        "aboutImageUrl": { "type": "string", "maxLength": 500 },
+        "principalName": { "type": "string", "maxLength": 120 },
+        "principalDesignation": { "type": "string", "maxLength": 120 },
+        "principalPhotoUrl": { "type": "string", "maxLength": 500 },
+        "principalMessage": { "type": "string", "maxLength": 2500 },
+        "tickerOverride": { "type": "string", "maxLength": 400 },
+        "address": { "type": "string", "maxLength": 300 },
+        "phone": { "type": "string", "maxLength": 80 },
+        "email": { "type": "string", "maxLength": 160 },
+        "websiteUrl": { "type": "string", "maxLength": 300 },
+        "facebookUrl": { "type": "string", "maxLength": 300 },
+        "facebookVerified": { "type": "boolean" },
+        "googleMapQuery": { "type": "string", "maxLength": 300 },
+        "officeHours": { "type": "string", "maxLength": 140 },
+        "educationMediums": { "type": "array", "description": "Bounded list of up to 10 education medium labels" },
+        "classList": { "type": "array", "description": "Bounded list of up to 20 offered classes" },
+        "highestClass": { "type": "string", "maxLength": 80 },
+        "shifts": { "type": "array", "description": "Bounded list of up to 6 active shifts" },
+        "specialPrograms": { "type": "array", "description": "Bounded list of up to 15 Islamic and special educational programs" },
+        "totalStaffCount": { "type": "number" },
+        "totalClassesCount": { "type": "number" },
+        "passRatePercent": { "type": "number" },
+        "academicCalendarNote": { "type": "string", "maxLength": 2000 },
+        "holidayListNote": { "type": "string", "maxLength": 2000 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["schoolNameBn", "updatedAt"]
+    },
+    "HeroSlide": {
+      "title": "Homepage Hero Slide",
+      "description": "Image slider entry displayed on the public homepage.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "subtitle": { "type": "string", "maxLength": 280 },
+        "imageUrl": { "type": "string", "minLength": 4, "maxLength": 500 },
+        "orderIndex": { "type": "number" },
+        "isActive": { "type": "boolean" },
+        "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "imageUrl", "orderIndex", "isActive", "authorUid", "createdAt", "updatedAt"]
+    },
+    "GoverningMember": {
+      "title": "Governing Body Member",
+      "description": "School director / managing committee profile and statement.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "designation": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "qualification": { "type": "string", "maxLength": 140 },
+        "responsibility": { "type": "string", "maxLength": 180 },
+        "bio": { "type": "string", "maxLength": 1000 },
+        "speech": { "type": "string", "maxLength": 1500 },
+        "photoUrl": { "type": "string", "maxLength": 500 },
+        "joinedDate": { "type": "string", "maxLength": 40 },
+        "termEndDate": { "type": "string", "maxLength": 40 },
+        "orderIndex": { "type": "number" },
+        "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "designation", "orderIndex", "authorUid", "createdAt", "updatedAt"]
+    },
+    "ImportantLink": {
+      "title": "Important Institutional Link",
+      "description": "External government education portal or key resource link.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "url": { "type": "string", "minLength": 4, "maxLength": 500 },
+        "category": { "type": "string", "maxLength": 60 },
+        "orderIndex": { "type": "number" },
+        "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "url", "orderIndex", "authorUid", "createdAt", "updatedAt"]
+    },
+    "StudentAchievement": {
+      "title": "Meritorious Student & Achievement",
+      "description": "Public showcase profile of meritorious students and awards.",
+      "type": "object",
+      "properties": {
+        "studentName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "className": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "rollNumber": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "academicYear": { "type": "string", "maxLength": 20 },
+        "achievementTitle": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "description": { "type": "string", "maxLength": 800 },
+        "photoUrl": { "type": "string", "maxLength": 500 },
+        "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentName", "className", "rollNumber", "achievementTitle", "authorUid", "createdAt", "updatedAt"]
+    },
+    "UserAccount": {
+      "title": "User Account",
+      "description": "Authenticated portal account storing user role and linked student/teacher/parent reference.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "email": { "type": "string", "format": "email", "maxLength": 160 },
+        "role": { "type": "string", "enum": ["admin", "teacher", "student", "parent"] },
+        "linkedEntityId": { "type": "string", "maxLength": 128 },
+        "className": { "type": "string", "maxLength": 40 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "email", "role", "createdAt", "updatedAt"]
+    },
+    "AdminRegistry": {
+      "title": "Admin Registry",
+      "description": "Trusted administrator lookup document.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "email": { "type": "string", "format": "email", "maxLength": 160 },
+        "grantedBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "grantedBy", "createdAt"]
+    },
+    "Student": {
+      "title": "Student Record",
+      "description": "Enrolled student record with academic placement and guardian contact information.",
+      "type": "object",
+      "properties": {
+        "studentIdCode": { "type": "string", "minLength": 2, "maxLength": 32 },
+        "rollNumber": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "name": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "nameBn": { "type": "string", "maxLength": 120 },
+        "fatherName": { "type": "string", "maxLength": 120 },
+        "motherName": { "type": "string", "maxLength": 120 },
+        "photoUrl": { "type": "string", "maxLength": 500 },
+        "className": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "section": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "shift": { "type": "string", "enum": ["Morning", "Day"] },
+        "group": { "type": "string", "enum": ["General", "Science", "Business Studies", "Humanities"] },
+        "gender": { "type": "string", "enum": ["Male", "Female", "Other"] },
+        "dateOfBirth": { "type": "string", "maxLength": 20 },
+        "guardianName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "guardianPhone": { "type": "string", "minLength": 6, "maxLength": 25 },
+        "address": { "type": "string", "maxLength": 300 },
+        "bloodGroup": { "type": "string", "maxLength": 10 },
+        "status": { "type": "string", "enum": ["Active", "Inactive", "Graduated"] },
+        "studentUid": { "type": "string", "maxLength": 128 },
+        "parentUid": { "type": "string", "maxLength": 128 },
+        "admissionYear": { "type": "string", "maxLength": 10 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentIdCode", "rollNumber", "name", "className", "section", "shift", "group", "gender", "guardianName", "guardianPhone", "status", "createdAt", "updatedAt"]
+    },
+    "FacultyPublic": {
+      "title": "Public Faculty Profile",
+      "description": "Publicly visible teacher directory entry without private contact or salary PII.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "nameBn": { "type": "string", "maxLength": 120 },
+        "designation": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "department": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "qualification": { "type": "string", "maxLength": 140 },
+        "responsibility": { "type": "string", "maxLength": 160 },
+        "bio": { "type": "string", "maxLength": 600 },
+        "photoUrl": { "type": "string", "maxLength": 500 },
+        "experienceYears": { "type": "number" },
+        "subject": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "shift": { "type": "string", "enum": ["Morning", "Day", "Both"] },
+        "status": { "type": "string", "enum": ["Active", "OnLeave", "Inactive"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "designation", "department", "subject", "shift", "status", "createdAt", "updatedAt"]
+    },
+    "TeacherRecord": {
+      "title": "Private Teacher HR Record",
+      "description": "Restricted HR and payroll details for faculty members.",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string", "minLength": 2, "maxLength": 32 },
+        "facultyId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "name": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "designation": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "department": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "phone": { "type": "string", "minLength": 6, "maxLength": 25 },
+        "email": { "type": "string", "format": "email", "maxLength": 160 },
+        "salaryBdt": { "type": "number" },
+        "joiningDate": { "type": "string", "maxLength": 20 },
+        "status": { "type": "string", "enum": ["Active", "OnLeave", "Inactive"] },
+        "teacherUid": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["employeeId", "facultyId", "name", "designation", "department", "phone", "email", "salaryBdt", "status", "createdAt", "updatedAt"]
+    },
+    "AdmissionApplication": {
+      "title": "Online Admission Application",
+      "description": "Online student admission application submitted by an authenticated applicant or parent.",
+      "type": "object",
+      "properties": {
+        "applicationNo": { "type": "string", "minLength": 3, "maxLength": 40 },
+        "applicantName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "applicantNameBn": { "type": "string", "maxLength": 120 },
+        "fatherName": { "type": "string", "maxLength": 120 },
+        "motherName": { "type": "string", "maxLength": 120 },
+        "birthRegNo": { "type": "string", "maxLength": 40 },
+        "photoUrl": { "type": "string", "maxLength": 500 },
+        "applyingClass": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "shift": { "type": "string", "enum": ["Morning", "Day"] },
+        "group": { "type": "string", "enum": ["General", "Science", "Business Studies", "Humanities"] },
+        "dateOfBirth": { "type": "string", "minLength": 4, "maxLength": 20 },
+        "gender": { "type": "string", "enum": ["Male", "Female", "Other"] },
+        "previousSchool": { "type": "string", "maxLength": 160 },
+        "guardianName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "guardianPhone": { "type": "string", "minLength": 6, "maxLength": 25 },
+        "guardianEmail": { "type": "string", "maxLength": 160 },
+        "address": { "type": "string", "minLength": 4, "maxLength": 300 },
+        "status": { "type": "string", "enum": ["Pending", "UnderReview", "Approved", "Rejected"] },
+        "remarks": { "type": "string", "maxLength": 400 },
+        "applicantUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["applicationNo", "applicantName", "applyingClass", "shift", "group", "dateOfBirth", "gender", "guardianName", "guardianPhone", "address", "status", "applicantUid", "createdAt", "updatedAt"]
+    },
+    "AttendanceRecord": {
+      "title": "Daily Attendance Record",
+      "description": "Per-student daily class attendance entry.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "minLength": 8, "maxLength": 20 },
+        "className": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "section": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "studentId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "studentName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "rollNumber": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "status": { "type": "string", "enum": ["Present", "Absent", "Late", "Leave"] },
+        "remarks": { "type": "string", "maxLength": 200 },
+        "markedByUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "studentUid": { "type": "string", "maxLength": 128 },
+        "parentUid": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["date", "className", "section", "studentId", "studentName", "rollNumber", "status", "markedByUid", "createdAt", "updatedAt"]
+    },
+    "ExamResult": {
+      "title": "Examination Result",
+      "description": "Student term examination marksheet calculated on Bangladesh NCTB GPA 5.00 scale.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "studentRoll": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "studentName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "className": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "section": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "examName": { "type": "string", "minLength": 2, "maxLength": 100 },
+        "academicYear": { "type": "string", "minLength": 4, "maxLength": 10 },
+        "meritPosition": { "type": "string", "maxLength": 30 },
+        "subjects": { "type": "array", "description": "Bounded list of up to 15 subject mark objects" },
+        "totalMarks": { "type": "number" },
+        "gpa": { "type": "number" },
+        "grade": { "type": "string", "enum": ["A+", "A", "A-", "B", "C", "D", "F"] },
+        "status": { "type": "string", "enum": ["Draft", "Published"] },
+        "studentUid": { "type": "string", "maxLength": 128 },
+        "parentUid": { "type": "string", "maxLength": 128 },
+        "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentId", "studentRoll", "studentName", "className", "section", "examName", "academicYear", "subjects", "totalMarks", "gpa", "grade", "status", "authorUid", "createdAt", "updatedAt"]
+    },
+    "RoutineItem": {
+      "title": "Class or Exam Routine Item",
+      "description": "Scheduled class period or examination slot.",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["class", "exam"] },
+        "className": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "section": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "dayOrDate": { "type": "string", "minLength": 2, "maxLength": 40 },
+        "timeSlot": { "type": "string", "minLength": 3, "maxLength": 40 },
+        "subject": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "teacherName": { "type": "string", "maxLength": 100 },
+        "room": { "type": "string", "maxLength": 40 },
+        "examName": { "type": "string", "maxLength": 100 },
+        "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "className", "section", "dayOrDate", "timeSlot", "subject", "authorUid", "createdAt", "updatedAt"]
+    },
+    "FeeInvoice": {
+      "title": "Tuition Fee Invoice",
+      "description": "Student tuition or academic fee ledger entry with payment tracking.",
+      "type": "object",
+      "properties": {
+        "invoiceNo": { "type": "string", "minLength": 3, "maxLength": 40 },
+        "studentId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "studentName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "rollNumber": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "className": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "month": { "type": "string", "minLength": 3, "maxLength": 30 },
+        "academicYear": { "type": "string", "minLength": 4, "maxLength": 10 },
+        "feeCategory": { "type": "string", "enum": ["Tuition", "Exam", "Admission", "Library", "Transport", "Lab"] },
+        "amountBdt": { "type": "number" },
+        "paidAmountBdt": { "type": "number" },
+        "dueDate": { "type": "string", "minLength": 8, "maxLength": 20 },
+        "status": { "type": "string", "enum": ["Unpaid", "Partial", "Paid"] },
+        "paymentMethod": { "type": "string", "enum": ["None", "Cash", "bKash", "Nagad", "Rocket", "Bank"] },
+        "transactionId": { "type": "string", "maxLength": 80 },
+        "paidDate": { "type": "string", "maxLength": 20 },
+        "studentUid": { "type": "string", "maxLength": 128 },
+        "parentUid": { "type": "string", "maxLength": 128 },
+        "createdByUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["invoiceNo", "studentId", "studentName", "rollNumber", "className", "month", "academicYear", "feeCategory", "amountBdt", "paidAmountBdt", "dueDate", "status", "paymentMethod", "createdByUid", "createdAt", "updatedAt"]
+    },
+    "Notice": {
+      "title": "Institutional Notice",
+      "description": "Official school notice published to website and portals.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 3, "maxLength": 180 },
+        "titleBn": { "type": "string", "maxLength": 180 },
+        "content": { "type": "string", "minLength": 5, "maxLength": 3000 },
+        "contentBn": { "type": "string", "maxLength": 3000 },
+        "category": { "type": "string", "enum": ["Academic", "Exam", "Admission", "Holiday", "General", "Urgent", "Result"] },
+        "audience": { "type": "string", "enum": ["All", "Students", "Teachers", "Parents"] },
+        "publishedDate": { "type": "string", "minLength": 8, "maxLength": 20 },
+        "isPinned": { "type": "boolean" },
+        "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "category", "audience", "publishedDate", "isPinned", "authorUid", "createdAt", "updatedAt"]
+    },
+    "NewsArticle": {
+      "title": "Campus News & Event",
+      "description": "Public campus news, achievement, or upcoming event story.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 3, "maxLength": 180 },
+        "titleBn": { "type": "string", "maxLength": 180 },
+        "summary": { "type": "string", "minLength": 5, "maxLength": 500 },
+        "summaryBn": { "type": "string", "maxLength": 500 },
+        "body": { "type": "string", "maxLength": 4000 },
+        "category": { "type": "string", "enum": ["Achievement", "Event", "Academic", "Sports", "Cultural"] },
+        "eventDate": { "type": "string", "minLength": 8, "maxLength": 20 },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "summary", "category", "eventDate", "authorUid", "createdAt", "updatedAt"]
+    },
+    "GalleryItem": {
+      "title": "Campus Photo & Video Gallery Item",
+      "description": "Curated photograph or video from institutional life and events.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "titleBn": { "type": "string", "maxLength": 140 },
+        "caption": { "type": "string", "maxLength": 400 },
+        "category": { "type": "string", "enum": ["Campus", "Science", "Library", "Sports", "Cultural"] },
+        "mediaType": { "type": "string", "enum": ["photo", "video"] },
+        "imageUrl": { "type": "string", "minLength": 4, "maxLength": 500 },
+        "videoUrl": { "type": "string", "maxLength": 500 },
+        "eventDate": { "type": "string", "maxLength": 20 },
+        "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "category", "imageUrl", "authorUid", "createdAt", "updatedAt"]
+    },
+    "LibraryResource": {
+      "title": "Digital Library & LMS Resource",
+      "description": "Digital book, NCTB syllabus, lecture note, or classroom assignment.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "titleBn": { "type": "string", "maxLength": 180 },
+        "author": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "subject": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "classLevel": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "resourceType": { "type": "string", "enum": ["ebook", "lecture_note", "video_lesson", "assignment", "syllabus", "online_class"] },
+        "description": { "type": "string", "maxLength": 1200 },
+        "resourceUrl": { "type": "string", "maxLength": 500 },
+        "isbnOrCode": { "type": "string", "maxLength": 60 },
+        "totalCopies": { "type": "number" },
+        "availableCopies": { "type": "number" },
+        "uploadedByUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "author", "subject", "classLevel", "resourceType", "totalCopies", "availableCopies", "uploadedByUid", "createdAt", "updatedAt"]
+    },
+    "LmsSubmission": {
+      "title": "LMS Assignment Submission",
+      "description": "Student assignment submission linked to a LibraryResource.",
+      "type": "object",
+      "properties": {
+        "resourceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "resourceTitle": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "studentId": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "className": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "submissionText": { "type": "string", "minLength": 3, "maxLength": 2000 },
+        "submissionLink": { "type": "string", "maxLength": 500 },
+        "grade": { "type": "string", "maxLength": 20 },
+        "feedback": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["Submitted", "Graded"] },
+        "studentUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["resourceId", "resourceTitle", "studentName", "className", "submissionText", "status", "studentUid", "createdAt", "updatedAt"]
+    },
+    "BookLoan": {
+      "title": "Library Book Issue & Return Record",
+      "description": "Tracks issued books, due dates, returns, and late fines per student.",
+      "type": "object",
+      "properties": {
+        "resourceId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "bookTitle": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "studentId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "studentName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "className": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "rollNumber": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "issueDate": { "type": "string", "minLength": 8, "maxLength": 20 },
+        "dueDate": { "type": "string", "minLength": 8, "maxLength": 20 },
+        "returnDate": { "type": "string", "maxLength": 20 },
+        "fineBdt": { "type": "number" },
+        "status": { "type": "string", "enum": ["Issued", "Returned"] },
+        "studentUid": { "type": "string", "maxLength": 128 },
+        "issuedByUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["resourceId", "bookTitle", "studentId", "studentName", "className", "rollNumber", "issueDate", "dueDate", "fineBdt", "status", "issuedByUid", "createdAt", "updatedAt"]
+    },
+    "TransportRoute": {
+      "title": "School Bus & Transport Route",
+      "description": "School transport bus, route stops, driver/helper contacts, fee, and assigned students.",
+      "type": "object",
+      "properties": {
+        "busNumber": { "type": "string", "minLength": 2, "maxLength": 40 },
+        "routeName": { "type": "string", "minLength": 2, "maxLength": 140 },
+        "stops": { "type": "string", "minLength": 2, "maxLength": 600 },
+        "driverName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "driverPhone": { "type": "string", "minLength": 6, "maxLength": 25 },
+        "helperName": { "type": "string", "maxLength": 120 },
+        "helperPhone": { "type": "string", "maxLength": 25 },
+        "monthlyFeeBdt": { "type": "number" },
+        "capacity": { "type": "number" },
+        "assignedStudentIds": { "type": "array", "description": "Bounded list of up to 100 student IDs assigned to this bus" },
+        "status": { "type": "string", "enum": ["Active", "Maintenance", "Inactive"] },
+        "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["busNumber", "routeName", "stops", "driverName", "driverPhone", "monthlyFeeBdt", "capacity", "assignedStudentIds", "status", "authorUid", "createdAt", "updatedAt"]
+    },
+    "StaffMember": {
+      "title": "Non-Teaching Staff & Officer HR Profile",
+      "description": "School officer and support staff HR record with payroll and bonus.",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string", "minLength": 2, "maxLength": 32 },
+        "name": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "designation": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "department": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "roleType": { "type": "string", "enum": ["Officer", "Accountant", "Librarian", "Support", "Driver", "Security"] },
+        "phone": { "type": "string", "minLength": 6, "maxLength": 25 },
+        "email": { "type": "string", "maxLength": 160 },
+        "salaryBdt": { "type": "number" },
+        "bonusBdt": { "type": "number" },
+        "joiningDate": { "type": "string", "maxLength": 20 },
+        "status": { "type": "string", "enum": ["Active", "OnLeave", "Inactive"] },
+        "staffUid": { "type": "string", "maxLength": 128 },
+        "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["employeeId", "name", "designation", "department", "roleType", "phone", "salaryBdt", "status", "authorUid", "createdAt", "updatedAt"]
+    },
+    "StaffAttendance": {
+      "title": "Teacher & Staff Daily Attendance",
+      "description": "Daily attendance register for teachers and administrative staff.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "minLength": 8, "maxLength": 20 },
+        "personId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "personName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "designation": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "personType": { "type": "string", "enum": ["Teacher", "Staff"] },
+        "status": { "type": "string", "enum": ["Present", "Absent", "Late", "Leave"] },
+        "remarks": { "type": "string", "maxLength": 200 },
+        "markedByUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["date", "personId", "personName", "designation", "personType", "status", "markedByUid", "createdAt", "updatedAt"]
+    },
+    "LeaveRequest": {
+      "title": "Teacher, Staff & Student Leave Application",
+      "description": "Leave request submitted by portal users and approved or rejected by Admin.",
+      "type": "object",
+      "properties": {
+        "applicantUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "applicantName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "applicantRole": { "type": "string", "enum": ["teacher", "staff", "student"] },
+        "leaveType": { "type": "string", "enum": ["Casual", "Medical", "Emergency", "Annual"] },
+        "fromDate": { "type": "string", "minLength": 8, "maxLength": 20 },
+        "toDate": { "type": "string", "minLength": 8, "maxLength": 20 },
+        "reason": { "type": "string", "minLength": 3, "maxLength": 800 },
+        "status": { "type": "string", "enum": ["Pending", "Approved", "Rejected"] },
+        "adminRemarks": { "type": "string", "maxLength": 300 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["applicantUid", "applicantName", "applicantRole", "leaveType", "fromDate", "toDate", "reason", "status", "createdAt", "updatedAt"]
+    },
+    "FinancialEntry": {
+      "title": "School Income & Expense Ledger Entry",
+      "description": "Records school income, salary disbursements, utilities, maintenance, and other expenses.",
+      "type": "object",
+      "properties": {
+        "entryType": { "type": "string", "enum": ["Income", "Expense"] },
+        "category": { "type": "string", "enum": ["TuitionFee", "AdmissionFee", "Donation", "OtherIncome", "TeacherSalary", "StaffSalary", "Utility", "Maintenance", "Transport", "Library", "OtherExpense"] },
+        "title": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "amountBdt": { "type": "number" },
+        "date": { "type": "string", "minLength": 8, "maxLength": 20 },
+        "paymentMethod": { "type": "string", "enum": ["Cash", "bKash", "Nagad", "Rocket", "Bank"] },
+        "referenceNo": { "type": "string", "maxLength": 80 },
+        "notes": { "type": "string", "maxLength": 400 },
+        "recordedByUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["entryType", "category", "title", "amountBdt", "date", "paymentMethod", "recordedByUid", "createdAt", "updatedAt"]
+    },
+    "FeedbackMessage": {
+      "title": "Communication, Parent Complaint & Feedback",
+      "description": "Parent/student complaints, suggestions, teacher communication, and SMS/Email broadcast records.",
+      "type": "object",
+      "properties": {
+        "senderUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "senderName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "senderRole": { "type": "string", "enum": ["admin", "teacher", "student", "parent"] },
+        "category": { "type": "string", "enum": ["Complaint", "Suggestion", "TeacherMessage", "SmsBroadcast"] },
+        "subject": { "type": "string", "minLength": 2, "maxLength": 180 },
+        "message": { "type": "string", "minLength": 3, "maxLength": 2000 },
+        "targetAudience": { "type": "string", "maxLength": 80 },
+        "reply": { "type": "string", "maxLength": 1500 },
+        "status": { "type": "string", "enum": ["Open", "Replied", "Resolved"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["senderUid", "senderName", "senderRole", "category", "subject", "message", "status", "createdAt", "updatedAt"]
+    },
+    "CertificateRecord": {
+      "title": "Digital Certificate & Transfer Certificate (TC)",
+      "description": "Issued digital TC, Testimonial, Character, and Bonafide student certificates.",
+      "type": "object",
+      "properties": {
+        "certificateNo": { "type": "string", "minLength": 3, "maxLength": 40 },
+        "certificateType": { "type": "string", "enum": ["TC", "Testimonial", "Character", "Bonafide"] },
+        "studentId": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "studentName": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "fatherName": { "type": "string", "maxLength": 120 },
+        "motherName": { "type": "string", "maxLength": 120 },
+        "className": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "rollNumber": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "issueDate": { "type": "string", "minLength": 8, "maxLength": 20 },
+        "reasonOrRemarks": { "type": "string", "maxLength": 400 },
+        "issuedByUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["certificateNo", "certificateType", "studentId", "studentName", "className", "rollNumber", "issueDate", "issuedByUid", "createdAt", "updatedAt"]
+    },
+    "AuditLogEntry": {
+      "title": "Admin System Activity Log",
+      "description": "Immutable activity audit record for administrative oversight.",
+      "type": "object",
+      "properties": {
+        "actorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "actorName": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "action": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "module": { "type": "string", "minLength": 2, "maxLength": 80 },
+        "details": { "type": "string", "minLength": 2, "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["actorUid", "actorName", "action", "module", "details", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/site_settings/{settingId}": {
+      "schema": { "$ref": "#/entities/SiteSettings" },
+      "description": "Institution branding, EIIN/codes, history, principal speech, and contact settings."
+    },
+    "/slides/{slideId}": {
+      "schema": { "$ref": "#/entities/HeroSlide" },
+      "description": "Homepage image slider slides."
+    },
+    "/governing_body/{memberId}": {
+      "schema": { "$ref": "#/entities/GoverningMember" },
+      "description": "School governing body / directors profiles and speeches."
+    },
+    "/important_links/{linkId}": {
+      "schema": { "$ref": "#/entities/ImportantLink" },
+      "description": "Sidebar important institutional and ministry links."
+    },
+    "/student_achievements/{achievementId}": {
+      "schema": { "$ref": "#/entities/StudentAchievement" },
+      "description": "Meritorious students and special achievements showcase."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserAccount" },
+      "description": "Portal user profiles and RBAC role assignments."
+    },
+    "/admins/{userId}": {
+      "schema": { "$ref": "#/entities/AdminRegistry" },
+      "description": "Authoritative admin user ID lookup table."
+    },
+    "/students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Enrolled student records with guardian PII isolated."
+    },
+    "/faculty/{teacherId}": {
+      "schema": { "$ref": "#/entities/FacultyPublic" },
+      "description": "Public faculty directory (no private PII)."
+    },
+    "/teacher_records/{teacherId}": {
+      "schema": { "$ref": "#/entities/TeacherRecord" },
+      "description": "Private faculty HR & payroll records."
+    },
+    "/admissions/{admissionId}": {
+      "schema": { "$ref": "#/entities/AdmissionApplication" },
+      "description": "Online admission applications."
+    },
+    "/attendance/{attendanceId}": {
+      "schema": { "$ref": "#/entities/AttendanceRecord" },
+      "description": "Daily attendance register entries."
+    },
+    "/published_results/{resultId}": {
+      "schema": { "$ref": "#/entities/ExamResult" },
+      "description": "Examination results and NCTB GPA 5.00 marksheets."
+    },
+    "/routines/{routineId}": {
+      "schema": { "$ref": "#/entities/RoutineItem" },
+      "description": "Class routines and examination schedules."
+    },
+    "/fee_invoices/{invoiceId}": {
+      "schema": { "$ref": "#/entities/FeeInvoice" },
+      "description": "Tuition fee invoices and payment ledger."
+    },
+    "/notices/{noticeId}": {
+      "schema": { "$ref": "#/entities/Notice" },
+      "description": "Official school notices."
+    },
+    "/news/{newsId}": {
+      "schema": { "$ref": "#/entities/NewsArticle" },
+      "description": "Campus news and events."
+    },
+    "/gallery/{itemId}": {
+      "schema": { "$ref": "#/entities/GalleryItem" },
+      "description": "Campus photo & video gallery."
+    },
+    "/library_resources/{resourceId}": {
+      "schema": { "$ref": "#/entities/LibraryResource" },
+      "description": "Digital library catalog and LMS study materials."
+    },
+    "/lms_submissions/{submissionId}": {
+      "schema": { "$ref": "#/entities/LmsSubmission" },
+      "description": "Student submissions for LMS assignments."
+    },
+    "/book_loans/{loanId}": {
+      "schema": { "$ref": "#/entities/BookLoan" },
+      "description": "Library book issue, return, and late fine ledger."
+    },
+    "/transport_routes/{routeId}": {
+      "schema": { "$ref": "#/entities/TransportRoute" },
+      "description": "School buses, routes, drivers, fees, and student allocations."
+    },
+    "/staff_members/{staffId}": {
+      "schema": { "$ref": "#/entities/StaffMember" },
+      "description": "Non-teaching staff and officer HR profiles."
+    },
+    "/staff_attendance/{attendanceId}": {
+      "schema": { "$ref": "#/entities/StaffAttendance" },
+      "description": "Teacher and staff daily attendance register."
+    },
+    "/leave_requests/{leaveId}": {
+      "schema": { "$ref": "#/entities/LeaveRequest" },
+      "description": "Leave applications submitted by teachers, staff, or students."
+    },
+    "/financial_entries/{entryId}": {
+      "schema": { "$ref": "#/entities/FinancialEntry" },
+      "description": "School income, expenses, and salary disbursement ledger."
+    },
+    "/feedback_messages/{messageId}": {
+      "schema": { "$ref": "#/entities/FeedbackMessage" },
+      "description": "Parent/student feedback, complaints, teacher messaging, and SMS broadcast log."
+    },
+    "/certificates/{certId}": {
+      "schema": { "$ref": "#/entities/CertificateRecord" },
+      "description": "Issued digital certificates and Transfer Certificates (TC)."
+    },
+    "/audit_logs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLogEntry" },
+      "description": "Immutable system activity audit log."
+    }
+  }
+}

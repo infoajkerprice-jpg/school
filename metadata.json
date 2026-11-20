@@ -1,0 +1,8 @@
+{
+  "name": "Dhaka Heritage Model School & College",
+  "description": "Complete Educational Institution Management System for Dhaka Heritage Model School & College, Bangladesh — featuring public portal, online admissions, student and teacher management, attendance, NCTB GPA results, routines, tuition fee ledgers, digital library, and PDF/Excel reporting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
