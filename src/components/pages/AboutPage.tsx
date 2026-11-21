@@ -20,6 +20,7 @@ import { usePublicData } from '../../context/PublicDataContext';
 import { toBnDigits } from '../../i18n';
 import { groupClassStages, resolveIslamicPrograms } from '../../lib/programDetails';
 import { CAMPUS_IMAGES } from '../../types';
+import { MobileCardSlider } from '../MobileCardSlider';
 import { PageHeader, PageSkeleton } from '../PageHeader';
 
 const PROGRAM_CARD_STYLES = [
@@ -332,7 +333,38 @@ export const AboutPage: React.FC = () => {
                   </div>
                   <span className="text-xs font-medium text-[#546E7A]">বিস্তারিত জানতে ক্লিক করুন</span>
                 </div>
-                <div className="mt-3.5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {/* Mobile Single-Card Auto Slider */}
+                <div className="mt-3.5 sm:hidden">
+                  <MobileCardSlider
+                    items={resolveIslamicPrograms(specialPrograms)}
+                    getKey={(prog) => prog.slug}
+                    ariaLabel="বিশেষ ইসলামিক শিক্ষা কার্যক্রম স্লাইডার"
+                    intervalMs={3000}
+                    transitionMs={500}
+                    dotTheme="green"
+                    renderItem={(prog, idx) => (
+                      <Link
+                        to={`/programs?focus=${prog.slug}`}
+                        className={`flex h-full min-h-[120px] items-start justify-between gap-3 rounded-xl border p-4 transition active:scale-[0.99] ${
+                          PROGRAM_CARD_STYLES[idx % PROGRAM_CARD_STYLES.length]
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-extrabold text-[#123B67]">
+                            {toBnDigits(String(idx + 1).padStart(2, '0'))}. {prog.title}
+                          </p>
+                          <p className="mt-1.5 text-xs leading-relaxed text-[#4E6774]">
+                            {prog.shortDesc}
+                          </p>
+                        </div>
+                        <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-[#087F5B]" />
+                      </Link>
+                    )}
+                  />
+                </div>
+
+                {/* Tablet & Desktop 2-Column Grid */}
+                <div className="mt-3.5 hidden gap-3 sm:grid sm:grid-cols-2">
                   {resolveIslamicPrograms(specialPrograms).map((prog, idx) => (
                     <Link
                       key={prog.slug}

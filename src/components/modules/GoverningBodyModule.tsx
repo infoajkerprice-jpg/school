@@ -11,8 +11,10 @@ import {
 } from 'firebase/firestore';
 import { db, handleFirestoreError, makeSafeDocId, OperationType } from '../../lib/firebase';
 import { clampStr } from '../../lib/grading';
+import { MAX_PORTRAIT_IMAGE_LEN, sanitizeImageUrlForFirestore } from '../../lib/imageUpload';
 import { toBnDigits } from '../../i18n';
 import { AdminModuleHeader } from '../AdminPagination';
+import { ImageUploadField } from '../ImageUploadField';
 import { useUIFeedback } from '../ToastContext';
 import type { GoverningMember, UserAccount } from '../../types';
 
@@ -97,7 +99,7 @@ export const GoverningBodyModule: React.FC<Props> = ({ currentUser }) => {
         responsibility: clampStr(form.responsibility, 180),
         bio: clampStr(form.bio, 1000),
         speech: clampStr(form.speech, 1500),
-        photoUrl: clampStr(form.photoUrl, 500),
+        photoUrl: sanitizeImageUrlForFirestore(form.photoUrl, MAX_PORTRAIT_IMAGE_LEN),
         joinedDate: clampStr(form.joinedDate, 40),
         termEndDate: clampStr(form.termEndDate, 40),
         orderIndex: orderNum,
@@ -240,12 +242,11 @@ export const GoverningBodyModule: React.FC<Props> = ({ currentUser }) => {
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="mb-1.5 block text-xs font-bold text-[#263B35] dark:text-slate-300">ছবির লিংক (ঐচ্ছিক)</label>
-            <input
+            <ImageUploadField
+              label="সদস্যের ছবি আপলোড (ঐচ্ছিক)"
               value={form.photoUrl}
-              onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
-              placeholder="https://..."
-              className={inputClass}
+              onChange={(url) => setForm({ ...form, photoUrl: url })}
+              preset="portrait"
             />
           </div>
           <div>

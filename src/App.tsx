@@ -56,6 +56,7 @@ import { GalleryDetailPage, GalleryPage } from './components/pages/GalleryPage';
 import { NoticeDetailPage, NoticesPage } from './components/pages/NoticesPages';
 import { NewsDetailPage, NewsPage } from './components/pages/NewsPages';
 import { ContactPage, NotFoundPage } from './components/pages/ContactPage';
+import { VerifyStudentPage } from './components/pages/VerifyStudentPage';
 
 function mapAuthErrorToBn(err: unknown): string {
   const code =
@@ -133,48 +134,44 @@ const LoginPage: React.FC<{
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[#F2F8F5] px-4 py-8">
-      <div className="mx-auto grid w-full max-w-5xl overflow-hidden rounded-3xl border border-[#CFE2D8] bg-white shadow-2xl lg:grid-cols-12">
+    <div className="relative flex min-h-screen items-center justify-center bg-[#F5F9F7] px-3 py-4 sm:px-4 sm:py-8 lg:bg-[#F2F8F5]">
+      <div className="mx-auto grid w-full max-w-5xl overflow-hidden rounded-2xl border border-[#CFE2D8] bg-white shadow-xl sm:rounded-3xl lg:grid-cols-12 lg:shadow-2xl">
         {/* Left Brand Panel */}
-        <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#123B67] via-[#0E4A66] to-[#087F5B] p-7 text-white sm:p-10 lg:col-span-5">
+        <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#123B67] via-[#0E4A66] to-[#087F5B] p-5 text-white sm:p-7 lg:col-span-5 lg:p-10">
           <div className="pointer-events-none absolute -top-20 -right-16 h-56 w-56 rounded-full bg-[#21A9D6]/20 blur-2xl" />
           <div className="pointer-events-none absolute -bottom-24 -left-16 h-60 w-60 rounded-full bg-[#805AD5]/25 blur-2xl" />
 
           <div className="relative z-10">
             <Link to="/" className="inline-flex items-center gap-3">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/15 ring-2 ring-[#F4A62A]/60 backdrop-blur-xs">
-                {settings.logoUrl ? (
-                  <img
-                    src={settings.logoUrl}
-                    alt={settings.schoolNameBn}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <GraduationCap className="h-8 w-8 text-[#F4A62A]" />
-                )}
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-1 shadow-md ring-2 ring-[#F4A62A]/70 sm:h-14 sm:w-14">
+                <img
+                  src={settings.logoUrl || '/school-logo.png'}
+                  alt={settings.schoolNameBn}
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div className="min-w-0">
-                <p className="text-[11px] font-bold tracking-wide text-[#F4A62A]">
+                <p className="text-[10.5px] font-bold tracking-wide text-[#F4A62A] sm:text-[11px]">
                   স্থাপিত: {toBnDigits(settings.establishedYear || '২০১৯')} খ্রি.
                 </p>
-                <h1 className="text-lg font-extrabold leading-tight sm:text-xl">
+                <h1 className="text-base font-extrabold leading-tight sm:text-xl">
                   {settings.schoolNameBn}
                 </h1>
               </div>
             </Link>
 
             {settings.schoolNameEn && (
-              <p className="mt-2 text-xs font-semibold text-[#7DD3FC]">{settings.schoolNameEn}</p>
+              <p className="mt-1.5 text-[11px] font-semibold text-[#7DD3FC] sm:mt-2 sm:text-xs">{settings.schoolNameEn}</p>
             )}
 
-            <div className="mt-6 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-xs">
+            <div className="mt-4 hidden rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-xs lg:mt-6 lg:block">
               <p className="text-xs font-bold text-[#F4A62A]">“এসো শিখি দুনিয়া ও আখিরাতের কল্যাণে”</p>
               <p className="mt-1.5 text-xs leading-relaxed text-sky-100/90">
                 অ্যাডমিন, শিক্ষকমণ্ডলী, শিক্ষার্থী ও অভিভাবকদের জন্য সমন্বিত ডিজিটাল স্কুল ম্যানেজমেন্ট ও ওয়েবসাইট কন্ট্রোল পোর্টাল।
               </p>
             </div>
 
-            <ul className="mt-6 space-y-3 text-xs text-sky-50/95">
+            <ul className="mt-6 hidden space-y-3 text-xs text-sky-50/95 lg:block">
               {[
                 { text: 'রোল-ভিত্তিক নিরাপদ প্রবেশাধিকার (অ্যাডমিন, শিক্ষক, শিক্ষার্থী, অভিভাবক)', accent: 'text-[#F4A62A]' },
                 { text: 'রিয়েল-টাইম নোটিশ, ভর্তি, উপস্থিতি ও ফলাফল পরিচালনা', accent: 'text-[#21A9D6]' },
@@ -188,14 +185,14 @@ const LoginPage: React.FC<{
             </ul>
           </div>
 
-          <div className="relative z-10 mt-8 border-t border-white/15 pt-4 text-[11px] text-sky-100/80">
+          <div className="relative z-10 mt-8 hidden border-t border-white/15 pt-4 text-[11px] text-sky-100/80 lg:block">
             <p className="font-semibold text-white">তুলসীঘাট, গাইবান্ধা সদর, গাইবান্ধা-৫৭০০</p>
             <p className="mt-0.5">সহায়তায়: {toBnDigits(settings.phone || '+880 1711-759705')}</p>
           </div>
         </div>
 
         {/* Right Login Form Panel */}
-        <div className="flex flex-col justify-center p-6 sm:p-10 lg:col-span-7">
+        <div className="flex flex-col justify-center p-5 sm:p-10 lg:col-span-7">
           <div className="mx-auto w-full max-w-md">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -672,6 +669,7 @@ function AppInner() {
           <Route path="/news" element={<NewsPage />} />
           <Route path="/news/:id" element={<NewsDetailPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/verify" element={<VerifyStudentPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 

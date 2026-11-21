@@ -108,17 +108,17 @@ export const AdminModuleHeader: React.FC<AdminModuleHeaderProps> = ({
   accent = 'emerald',
   actions,
 }) => (
-  <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#DCE8E1] bg-white px-5 py-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-    <div className="flex min-w-0 items-center gap-3.5">
-      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${ICON_BG[accent]}`}>
+  <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#DCE8E1] bg-white px-3.5 py-3 shadow-2xs sm:gap-4 sm:px-5 sm:py-4 dark:border-slate-800 dark:bg-slate-900">
+    <div className="flex min-w-0 items-center gap-3 sm:gap-3.5">
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-11 sm:w-11 ${ICON_BG[accent]}`}>
         {icon}
       </div>
       <div className="min-w-0">
-        <h2 className="truncate text-lg font-extrabold text-[#123B67] sm:text-xl dark:text-white">
+        <h2 className="truncate text-base font-extrabold text-[#123B67] sm:text-xl dark:text-white">
           {title}
         </h2>
         {subtitle && (
-          <p className="mt-0.5 text-xs text-[#526B78] dark:text-slate-400">{subtitle}</p>
+          <p className="mt-0.5 line-clamp-2 text-[11px] text-[#526B78] sm:text-xs dark:text-slate-400">{subtitle}</p>
         )}
       </div>
     </div>

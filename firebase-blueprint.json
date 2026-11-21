@@ -8,7 +8,7 @@
         "schoolNameBn": { "type": "string", "minLength": 2, "maxLength": 180 },
         "schoolNameEn": { "type": "string", "maxLength": 180 },
         "schoolSubtitleBn": { "type": "string", "maxLength": 180 },
-        "logoUrl": { "type": "string", "maxLength": 500 },
+        "logoUrl": { "type": "string", "maxLength": 180000 },
         "eiin": { "type": "string", "maxLength": 30 },
         "schoolCode": { "type": "string", "maxLength": 30 },
         "regNo": { "type": "string", "maxLength": 40 },
@@ -17,10 +17,10 @@
         "aboutText": { "type": "string", "maxLength": 4000 },
         "historyText": { "type": "string", "maxLength": 4000 },
         "missionText": { "type": "string", "maxLength": 4000 },
-        "aboutImageUrl": { "type": "string", "maxLength": 500 },
+        "aboutImageUrl": { "type": "string", "maxLength": 260000 },
         "principalName": { "type": "string", "maxLength": 120 },
         "principalDesignation": { "type": "string", "maxLength": 120 },
-        "principalPhotoUrl": { "type": "string", "maxLength": 500 },
+        "principalPhotoUrl": { "type": "string", "maxLength": 150000 },
         "principalMessage": { "type": "string", "maxLength": 2500 },
         "tickerOverride": { "type": "string", "maxLength": 400 },
         "address": { "type": "string", "maxLength": 300 },
@@ -52,7 +52,7 @@
       "properties": {
         "title": { "type": "string", "minLength": 2, "maxLength": 180 },
         "subtitle": { "type": "string", "maxLength": 280 },
-        "imageUrl": { "type": "string", "minLength": 4, "maxLength": 500 },
+        "imageUrl": { "type": "string", "minLength": 4, "maxLength": 260000 },
         "orderIndex": { "type": "number" },
         "isActive": { "type": "boolean" },
         "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
@@ -72,7 +72,7 @@
         "responsibility": { "type": "string", "maxLength": 180 },
         "bio": { "type": "string", "maxLength": 1000 },
         "speech": { "type": "string", "maxLength": 1500 },
-        "photoUrl": { "type": "string", "maxLength": 500 },
+        "photoUrl": { "type": "string", "maxLength": 150000 },
         "joinedDate": { "type": "string", "maxLength": 40 },
         "termEndDate": { "type": "string", "maxLength": 40 },
         "orderIndex": { "type": "number" },
@@ -108,7 +108,7 @@
         "academicYear": { "type": "string", "maxLength": 20 },
         "achievementTitle": { "type": "string", "minLength": 2, "maxLength": 180 },
         "description": { "type": "string", "maxLength": 800 },
-        "photoUrl": { "type": "string", "maxLength": 500 },
+        "photoUrl": { "type": "string", "maxLength": 150000 },
         "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
@@ -154,7 +154,7 @@
         "nameBn": { "type": "string", "maxLength": 120 },
         "fatherName": { "type": "string", "maxLength": 120 },
         "motherName": { "type": "string", "maxLength": 120 },
-        "photoUrl": { "type": "string", "maxLength": 500 },
+        "photoUrl": { "type": "string", "maxLength": 150000 },
         "className": { "type": "string", "minLength": 1, "maxLength": 40 },
         "section": { "type": "string", "minLength": 1, "maxLength": 20 },
         "shift": { "type": "string", "enum": ["Morning", "Day"] },
@@ -174,6 +174,26 @@
       },
       "required": ["studentIdCode", "rollNumber", "name", "className", "section", "shift", "group", "gender", "guardianName", "guardianPhone", "status", "createdAt", "updatedAt"]
     },
+    "StudentVerification": {
+      "title": "Public Student QR Verification Record",
+      "description": "Zero-PII public verification snapshot keyed by studentIdCode for QR scanning on Admit Cards and Student ID Cards.",
+      "type": "object",
+      "properties": {
+        "studentIdCode": { "type": "string", "minLength": 2, "maxLength": 32, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "studentDocId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "name": { "type": "string", "minLength": 2, "maxLength": 120 },
+        "className": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "section": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "shift": { "type": "string", "enum": ["Morning", "Day"] },
+        "group": { "type": "string", "enum": ["General", "Science", "Business Studies", "Humanities"] },
+        "rollNumber": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "status": { "type": "string", "enum": ["Active", "Inactive", "Graduated"] },
+        "admissionYear": { "type": "string", "maxLength": 10 },
+        "photoUrl": { "type": "string", "maxLength": 150000 },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["studentIdCode", "studentDocId", "name", "className", "section", "shift", "group", "rollNumber", "status", "updatedAt"]
+    },
     "FacultyPublic": {
       "title": "Public Faculty Profile",
       "description": "Publicly visible teacher directory entry without private contact or salary PII.",
@@ -186,7 +206,7 @@
         "qualification": { "type": "string", "maxLength": 140 },
         "responsibility": { "type": "string", "maxLength": 160 },
         "bio": { "type": "string", "maxLength": 600 },
-        "photoUrl": { "type": "string", "maxLength": 500 },
+        "photoUrl": { "type": "string", "maxLength": 150000 },
         "experienceYears": { "type": "number" },
         "subject": { "type": "string", "minLength": 2, "maxLength": 80 },
         "shift": { "type": "string", "enum": ["Morning", "Day", "Both"] },
@@ -228,7 +248,7 @@
         "fatherName": { "type": "string", "maxLength": 120 },
         "motherName": { "type": "string", "maxLength": 120 },
         "birthRegNo": { "type": "string", "maxLength": 40 },
-        "photoUrl": { "type": "string", "maxLength": 500 },
+        "photoUrl": { "type": "string", "maxLength": 150000 },
         "applyingClass": { "type": "string", "minLength": 1, "maxLength": 40 },
         "shift": { "type": "string", "enum": ["Morning", "Day"] },
         "group": { "type": "string", "enum": ["General", "Science", "Business Studies", "Humanities"] },
@@ -373,7 +393,7 @@
         "body": { "type": "string", "maxLength": 4000 },
         "category": { "type": "string", "enum": ["Achievement", "Event", "Academic", "Sports", "Cultural"] },
         "eventDate": { "type": "string", "minLength": 8, "maxLength": 20 },
-        "imageUrl": { "type": "string", "maxLength": 500 },
+        "imageUrl": { "type": "string", "maxLength": 260000 },
         "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
@@ -390,7 +410,7 @@
         "caption": { "type": "string", "maxLength": 400 },
         "category": { "type": "string", "enum": ["Campus", "Science", "Library", "Sports", "Cultural"] },
         "mediaType": { "type": "string", "enum": ["photo", "video"] },
-        "imageUrl": { "type": "string", "minLength": 4, "maxLength": 500 },
+        "imageUrl": { "type": "string", "minLength": 4, "maxLength": 260000 },
         "videoUrl": { "type": "string", "maxLength": 500 },
         "eventDate": { "type": "string", "maxLength": 20 },
         "authorUid": { "type": "string", "minLength": 1, "maxLength": 128 },
@@ -737,6 +757,10 @@
     "/audit_logs/{logId}": {
       "schema": { "$ref": "#/entities/AuditLogEntry" },
       "description": "Immutable system activity audit log."
+    },
+    "/student_verifications/{codeId}": {
+      "schema": { "$ref": "#/entities/StudentVerification" },
+      "description": "Zero-PII single-document public lookup for QR verification of Admit Cards and Student ID Cards."
     }
   }
 }

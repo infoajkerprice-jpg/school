@@ -11,8 +11,10 @@ import {
 } from 'firebase/firestore';
 import { db, handleFirestoreError, makeSafeDocId, OperationType } from '../../lib/firebase';
 import { clampStr } from '../../lib/grading';
+import { MAX_PORTRAIT_IMAGE_LEN, sanitizeImageUrlForFirestore } from '../../lib/imageUpload';
 import { labelClass, toBnDigits } from '../../i18n';
 import { AdminModuleHeader, AdminPagination } from '../AdminPagination';
+import { ImageUploadField } from '../ImageUploadField';
 import { useUIFeedback } from '../ToastContext';
 import { BD_CLASSES, type StudentAchievement, type UserAccount } from '../../types';
 
@@ -98,7 +100,7 @@ export const AchievementsModule: React.FC<Props> = ({ currentUser }) => {
         academicYear: clampStr(form.academicYear, 20),
         achievementTitle: clampStr(form.achievementTitle, 180),
         description: clampStr(form.description, 800),
-        photoUrl: clampStr(form.photoUrl, 500),
+        photoUrl: sanitizeImageUrlForFirestore(form.photoUrl, MAX_PORTRAIT_IMAGE_LEN),
       };
       if (editingId) {
         await updateDoc(doc(db, 'student_achievements', editingId), {
@@ -238,14 +240,11 @@ export const AchievementsModule: React.FC<Props> = ({ currentUser }) => {
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="mb-1.5 block text-xs font-bold text-[#263B35] dark:text-slate-300">
-              ছবির লিংক (ঐচ্ছিক)
-            </label>
-            <input
+            <ImageUploadField
+              label="শিক্ষার্থীর ছবি আপলোড (ঐচ্ছিক)"
               value={form.photoUrl}
-              onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
-              placeholder="https://..."
-              className={inputClass}
+              onChange={(url) => setForm({ ...form, photoUrl: url })}
+              preset="portrait"
             />
           </div>
           <div className="sm:col-span-2 lg:col-span-4">

@@ -340,7 +340,7 @@ export const PortalShell: React.FC<PortalShellProps> = ({ currentUser, onLogout 
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[#D4E6DD] bg-white shadow-sm transition-all duration-200 dark:border-slate-800 dark:bg-slate-900 lg:static lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } ${sidebarCollapsed ? 'w-72 lg:w-[78px]' : 'w-72'}`}
+        } ${sidebarCollapsed ? 'w-[84vw] max-w-[300px] lg:w-[78px]' : 'w-[84vw] max-w-[300px] lg:w-72'}`}
       >
         {/* Sidebar Brand Header */}
         <div className="flex h-16 shrink-0 items-center justify-between gap-2 bg-gradient-to-r from-[#123B67] to-[#087F5B] px-3.5 text-white">
@@ -348,12 +348,12 @@ export const PortalShell: React.FC<PortalShellProps> = ({ currentUser, onLogout 
             to="/dashboard"
             className={`flex min-w-0 items-center gap-2.5 ${sidebarCollapsed ? 'lg:justify-center lg:w-full' : ''}`}
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white/15 ring-1 ring-[#F4A62A]/60">
-              {settings.logoUrl ? (
-                <img src={settings.logoUrl} alt={settings.schoolNameBn} className="h-full w-full object-cover" />
-              ) : (
-                <GraduationCap className="h-5 w-5 text-[#F4A62A]" />
-              )}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-0.5 shadow-xs ring-2 ring-[#F4A62A]/60">
+              <img
+                src={settings.logoUrl || '/school-logo.png'}
+                alt={settings.schoolNameBn}
+                className="h-full w-full object-contain"
+              />
             </div>
             <div className={`min-w-0 ${sidebarCollapsed ? 'lg:hidden' : ''}`}>
               <p className="truncate text-sm font-extrabold leading-tight">{settings.schoolNameBn}</p>
@@ -465,7 +465,7 @@ export const PortalShell: React.FC<PortalShellProps> = ({ currentUser, onLogout 
       {/* ==================== MAIN WORKSPACE ==================== */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Modern SaaS Top Navigation Bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-[#D4E6DD] bg-white/95 px-4 shadow-2xs backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 sm:px-6">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-2 border-b border-[#D4E6DD] bg-white/95 px-3 shadow-2xs backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 sm:px-6 lg:h-16 lg:gap-3">
           <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
             {/* Mobile Hamburger */}
             <button
@@ -540,7 +540,7 @@ export const PortalShell: React.FC<PortalShellProps> = ({ currentUser, onLogout 
               </button>
 
               {notifOpen && (
-                <div className="sheet-enter absolute right-0 mt-2 w-80 overflow-hidden rounded-2xl border border-[#D4E6DD] bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+                <div className="sheet-enter fixed inset-x-3 top-16 z-50 overflow-hidden rounded-2xl border border-[#D4E6DD] bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-2 sm:w-80">
                   <div className="flex items-center justify-between bg-gradient-to-r from-[#123B67] to-[#087F5B] px-4 py-3 text-white">
                     <span className="text-xs font-extrabold">সাম্প্রতিক নোটিফিকেশন</span>
                     <span className="rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-bold tabular-nums">
@@ -624,7 +624,7 @@ export const PortalShell: React.FC<PortalShellProps> = ({ currentUser, onLogout 
               </button>
 
               {profileOpen && (
-                <div className="sheet-enter absolute right-0 mt-2 w-60 overflow-hidden rounded-2xl border border-[#D4E6DD] bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
+                <div className="sheet-enter absolute right-0 mt-2 w-[min(15rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-[#D4E6DD] bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900">
                   <div className="border-b border-[#E8F1EC] bg-[#F8FBF9] px-4 py-3 dark:border-slate-800 dark:bg-slate-950/60">
                     <p className="truncate text-xs font-extrabold text-[#123B67] dark:text-white">
                       {currentUser.displayName}
@@ -665,7 +665,7 @@ export const PortalShell: React.FC<PortalShellProps> = ({ currentUser, onLogout 
         </header>
 
         {/* Main Scroll Workspace */}
-        <main className="flex-1 p-4 sm:p-6">
+        <main className="flex-1 p-3 pb-24 sm:p-6 lg:pb-6">
           <div className="mx-auto max-w-[1320px]">
             <Routes>
               <Route
@@ -770,6 +770,106 @@ export const PortalShell: React.FC<PortalShellProps> = ({ currentUser, onLogout 
           </div>
         </main>
       </div>
+
+      {/* ==================== FIXED MOBILE ADMIN BOTTOM NAVIGATION (< lg) ==================== */}
+      <nav
+        aria-label="মোবাইল অ্যাডমিন নেভিগেশন"
+        className="pb-safe fixed inset-x-0 bottom-0 z-30 rounded-t-2xl border-t border-[#D4E6DD] bg-white/95 shadow-[0_-8px_24px_rgba(18,59,103,0.1)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 lg:hidden"
+      >
+        <div className="mx-auto grid h-[58px] max-w-lg grid-cols-5 items-center px-1">
+          <NavLink
+            to="/dashboard"
+            end
+            className={({ isActive }) =>
+              `flex h-full flex-col items-center justify-center gap-0.5 text-[10px] font-bold transition ${
+                isActive ? 'text-[#087F5B] dark:text-emerald-400' : 'text-[#526B78] dark:text-slate-400'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span className={`flex h-7 w-10 items-center justify-center rounded-xl ${isActive ? 'bg-[#087F5B]/12' : ''}`}>
+                  <LayoutDashboard className="h-4 w-4" />
+                </span>
+                <span className="leading-none">ড্যাশবোর্ড</span>
+              </>
+            )}
+          </NavLink>
+
+          <NavLink
+            to="/dashboard/students"
+            className={({ isActive }) =>
+              `flex h-full flex-col items-center justify-center gap-0.5 text-[10px] font-bold transition ${
+                isActive ? 'text-[#087F5B] dark:text-emerald-400' : 'text-[#526B78] dark:text-slate-400'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span className={`flex h-7 w-10 items-center justify-center rounded-xl ${isActive ? 'bg-[#087F5B]/12' : ''}`}>
+                  <GraduationCap className="h-4 w-4" />
+                </span>
+                <span className="leading-none">শিক্ষার্থী</span>
+              </>
+            )}
+          </NavLink>
+
+          <NavLink
+            to="/dashboard/attendance"
+            className={({ isActive }) =>
+              `flex h-full flex-col items-center justify-center gap-0.5 text-[10px] font-bold transition ${
+                isActive ? 'text-[#087F5B] dark:text-emerald-400' : 'text-[#526B78] dark:text-slate-400'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span
+                  className={`flex h-7 w-10 items-center justify-center rounded-xl ${
+                    isActive
+                      ? 'bg-[#087F5B] text-white shadow-xs'
+                      : 'bg-[#087F5B]/10 text-[#087F5B] dark:bg-emerald-500/20 dark:text-emerald-300'
+                  }`}
+                >
+                  <ClipboardCheck className="h-4 w-4" />
+                </span>
+                <span className="leading-none">হাজিরা</span>
+              </>
+            )}
+          </NavLink>
+
+          <NavLink
+            to="/dashboard/notices"
+            className={({ isActive }) =>
+              `flex h-full flex-col items-center justify-center gap-0.5 text-[10px] font-bold transition ${
+                isActive ? 'text-[#087F5B] dark:text-emerald-400' : 'text-[#526B78] dark:text-slate-400'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span className={`flex h-7 w-10 items-center justify-center rounded-xl ${isActive ? 'bg-[#087F5B]/12' : ''}`}>
+                  <Bell className="h-4 w-4" />
+                </span>
+                <span className="leading-none">নোটিশ</span>
+              </>
+            )}
+          </NavLink>
+
+          <button
+            type="button"
+            onClick={() => setSidebarOpen((v) => !v)}
+            className={`flex h-full flex-col items-center justify-center gap-0.5 text-[10px] font-bold transition ${
+              sidebarOpen ? 'text-[#087F5B] dark:text-emerald-400' : 'text-[#526B78] dark:text-slate-400'
+            }`}
+          >
+            <span className={`flex h-7 w-10 items-center justify-center rounded-xl ${sidebarOpen ? 'bg-[#087F5B]/12' : ''}`}>
+              {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </span>
+            <span className="leading-none">মেনু</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 };

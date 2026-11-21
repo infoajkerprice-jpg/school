@@ -63,6 +63,28 @@ service cloud.firestore {
       );
     }
 
+    function isSafeImageSrc(val, maxLen) {
+      return val is string
+        && val.size() <= maxLen
+        && (
+          val.size() == 0
+          || (val.size() >= 1 && val[0:1] == '/')
+          || (val.size() >= 8 && val[0:8] == 'https://')
+          || (val.size() >= 7 && val[0:7] == 'http://')
+          || (val.size() >= 23 && val[0:23] == 'data:image/jpeg;base64,')
+          || (val.size() >= 22 && val[0:22] == 'data:image/png;base64,')
+          || (val.size() >= 23 && val[0:23] == 'data:image/webp;base64,')
+        );
+    }
+
+    function isOptImageUrl(data, field, maxLen) {
+      return !(field in data) || isSafeImageSrc(data[field], maxLen);
+    }
+
+    function isReqImageUrl(data, field, maxLen) {
+      return (field in data) && data[field] is string && data[field].size() >= 4 && isSafeImageSrc(data[field], maxLen);
+    }
+
     // ==================== VALIDATION BLUEPRINTS ====================
 
     function isValidSiteSettings(data) {
@@ -81,7 +103,7 @@ service cloud.firestore {
         && isReqString(data, 'schoolNameBn', 2, 180)
         && isOptString(data, 'schoolNameEn', 180)
         && isOptString(data, 'schoolSubtitleBn', 180)
-        && isOptString(data, 'logoUrl', 500)
+        && isOptImageUrl(data, 'logoUrl', 180000)
         && isOptString(data, 'eiin', 30)
         && isOptString(data, 'schoolCode', 30)
         && isOptString(data, 'regNo', 40)
@@ -90,10 +112,10 @@ service cloud.firestore {
         && isOptString(data, 'aboutText', 4000)
         && isOptString(data, 'historyText', 4000)
         && isOptString(data, 'missionText', 4000)
-        && isOptString(data, 'aboutImageUrl', 500)
+        && isOptImageUrl(data, 'aboutImageUrl', 260000)
         && isOptString(data, 'principalName', 120)
         && isOptString(data, 'principalDesignation', 120)
-        && isOptString(data, 'principalPhotoUrl', 500)
+        && isOptImageUrl(data, 'principalPhotoUrl', 150000)
         && isOptString(data, 'principalMessage', 2500)
         && isOptString(data, 'tickerOverride', 400)
         && isOptString(data, 'address', 300)
@@ -122,7 +144,7 @@ service cloud.firestore {
         && data.keys().hasOnly(['title', 'subtitle', 'imageUrl', 'orderIndex', 'isActive', 'authorUid', 'createdAt', 'updatedAt'])
         && isReqString(data, 'title', 2, 180)
         && isOptString(data, 'subtitle', 280)
-        && isReqString(data, 'imageUrl', 4, 500)
+        && isReqImageUrl(data, 'imageUrl', 260000)
         && data.orderIndex is number && data.orderIndex >= 0 && data.orderIndex <= 500
         && data.isActive is bool
         && isValidId(data.authorUid)
@@ -139,7 +161,7 @@ service cloud.firestore {
         && isOptString(data, 'responsibility', 180)
         && isOptString(data, 'bio', 1000)
         && isOptString(data, 'speech', 1500)
-        && isOptString(data, 'photoUrl', 500)
+        && isOptImageUrl(data, 'photoUrl', 150000)
         && isOptString(data, 'joinedDate', 40)
         && isOptString(data, 'termEndDate', 40)
         && data.orderIndex is number && data.orderIndex >= 0 && data.orderIndex <= 500
@@ -169,7 +191,7 @@ service cloud.firestore {
         && isOptString(data, 'academicYear', 20)
         && isReqString(data, 'achievementTitle', 2, 180)
         && isOptString(data, 'description', 800)
-        && isOptString(data, 'photoUrl', 500)
+        && isOptImageUrl(data, 'photoUrl', 150000)
         && isValidId(data.authorUid)
         && data.createdAt is timestamp
         && data.updatedAt is timestamp;
@@ -215,7 +237,7 @@ service cloud.firestore {
         && isOptString(data, 'nameBn', 120)
         && isOptString(data, 'fatherName', 120)
         && isOptString(data, 'motherName', 120)
-        && isOptString(data, 'photoUrl', 500)
+        && isOptImageUrl(data, 'photoUrl', 150000)
         && isReqString(data, 'className', 1, 40)
         && isReqString(data, 'section', 1, 20)
         && data.shift in ['Morning', 'Day']
@@ -234,6 +256,30 @@ service cloud.firestore {
         && data.updatedAt is timestamp;
     }
 
+    function isValidStudentVerification(data) {
+      return data.keys().hasAll([
+          'studentIdCode', 'studentDocId', 'name', 'className', 'section',
+          'shift', 'group', 'rollNumber', 'status', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'studentIdCode', 'studentDocId', 'name', 'className', 'section',
+          'shift', 'group', 'rollNumber', 'status', 'admissionYear', 'photoUrl', 'updatedAt'
+        ])
+        && isValidId(data.studentIdCode)
+        && data.studentIdCode.size() >= 2 && data.studentIdCode.size() <= 32
+        && isValidId(data.studentDocId)
+        && isReqString(data, 'name', 2, 120)
+        && isReqString(data, 'className', 1, 40)
+        && isReqString(data, 'section', 1, 20)
+        && data.shift in ['Morning', 'Day']
+        && data.group in ['General', 'Science', 'Business Studies', 'Humanities']
+        && isReqString(data, 'rollNumber', 1, 20)
+        && data.status in ['Active', 'Inactive', 'Graduated']
+        && isOptString(data, 'admissionYear', 10)
+        && isOptImageUrl(data, 'photoUrl', 150000)
+        && data.updatedAt is timestamp;
+    }
+
     function isValidFacultyPublic(data) {
       return data.keys().hasAll(['name', 'designation', 'department', 'subject', 'shift', 'status', 'createdAt', 'updatedAt'])
         && data.keys().hasOnly(['name', 'nameBn', 'designation', 'department', 'qualification', 'responsibility', 'bio', 'photoUrl', 'experienceYears', 'subject', 'shift', 'status', 'createdAt', 'updatedAt'])
@@ -244,7 +290,7 @@ service cloud.firestore {
         && isOptString(data, 'qualification', 140)
         && isOptString(data, 'responsibility', 160)
         && isOptString(data, 'bio', 600)
-        && isOptString(data, 'photoUrl', 500)
+        && isOptImageUrl(data, 'photoUrl', 150000)
         && (!('experienceYears' in data) || (data.experienceYears is number && data.experienceYears >= 0 && data.experienceYears <= 60))
         && isReqString(data, 'subject', 2, 80)
         && data.shift in ['Morning', 'Day', 'Both']
@@ -290,7 +336,7 @@ service cloud.firestore {
         && isOptString(data, 'fatherName', 120)
         && isOptString(data, 'motherName', 120)
         && isOptString(data, 'birthRegNo', 40)
-        && isOptString(data, 'photoUrl', 500)
+        && isOptImageUrl(data, 'photoUrl', 150000)
         && isReqString(data, 'applyingClass', 1, 40)
         && data.shift in ['Morning', 'Day']
         && data.group in ['General', 'Science', 'Business Studies', 'Humanities']
@@ -441,7 +487,7 @@ service cloud.firestore {
         && isOptString(data, 'body', 4000)
         && data.category in ['Achievement', 'Event', 'Academic', 'Sports', 'Cultural']
         && isReqString(data, 'eventDate', 8, 20)
-        && isOptString(data, 'imageUrl', 500)
+        && isOptImageUrl(data, 'imageUrl', 260000)
         && isValidId(data.authorUid)
         && data.createdAt is timestamp
         && data.updatedAt is timestamp;
@@ -455,7 +501,7 @@ service cloud.firestore {
         && isOptString(data, 'caption', 400)
         && data.category in ['Campus', 'Science', 'Library', 'Sports', 'Cultural']
         && (!('mediaType' in data) || data.mediaType in ['photo', 'video'])
-        && isReqString(data, 'imageUrl', 4, 500)
+        && isReqImageUrl(data, 'imageUrl', 260000)
         && isOptString(data, 'videoUrl', 500)
         && isOptString(data, 'eventDate', 20)
         && isValidId(data.authorUid)
@@ -996,6 +1042,31 @@ service cloud.firestore {
           (existing().studentUid == request.auth.uid && existing().status == 'Submitted' && incoming().status == 'Submitted' && incoming().diff(existing()).affectedKeys().hasOnly(['submissionText', 'submissionLink', 'updatedAt']))
         );
       allow delete: if isValidId(submissionId) && isAdmin();
+    }
+
+    // Zero-PII Public Student QR Verification Index (Single-doc lookup by exact Student ID Code)
+    match /student_verifications/{codeId} {
+      allow get: if isValidId(codeId);
+      allow list: if isAdmin() || isTeacher();
+      allow create: if isValidId(codeId)
+        && isVerifiedUser()
+        && isAdmin()
+        && isValidStudentVerification(incoming())
+        && incoming().studentIdCode == codeId
+        && incoming().updatedAt == request.time
+        && existsAfter(/databases/$(database)/documents/students/$(incoming().studentDocId));
+      allow update: if isValidId(codeId)
+        && isVerifiedUser()
+        && isAdmin()
+        && isValidStudentVerification(incoming())
+        && incoming().studentIdCode == codeId
+        && incoming().studentDocId == existing().studentDocId
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'className', 'section', 'shift', 'group',
+          'rollNumber', 'status', 'admissionYear', 'photoUrl', 'updatedAt'
+        ]);
+      allow delete: if isValidId(codeId) && isAdmin();
     }
   }
 }

@@ -34,6 +34,11 @@ import {
   PDF_STUDENTS_ROSTER,
   syncPdfStudentsToFirestore,
 } from '../../lib/pdfStudentsRoster';
+import {
+  deleteStudentVerification,
+  upsertStudentVerification,
+} from '../../lib/studentVerification';
+import { MAX_PORTRAIT_IMAGE_LEN, sanitizeImageUrlForFirestore } from '../../lib/imageUpload';
 import { downloadStudentsPdf, exportToExcel } from '../../lib/reports';
 import {
   GENDER_BN,
@@ -53,6 +58,7 @@ import {
   type UserAccount,
 } from '../../types';
 import { AdminModuleHeader, AdminPagination } from '../AdminPagination';
+import { ImageUploadField } from '../ImageUploadField';
 import { normalizeSearchText } from '../StudentPicker';
 import { useUIFeedback } from '../ToastContext';
 
@@ -259,7 +265,7 @@ export const StudentsModule: React.FC<Props> = ({ currentUser }) => {
         nameBn: clampStr(form.name, 120),
         fatherName: clampStr(form.fatherName, 120),
         motherName: clampStr(form.motherName, 120),
-        photoUrl: clampStr(form.photoUrl, 500),
+        photoUrl: sanitizeImageUrlForFirestore(form.photoUrl, MAX_PORTRAIT_IMAGE_LEN),
         className: form.className,
         section: form.section,
         shift: form.shift,
@@ -278,6 +284,7 @@ export const StudentsModule: React.FC<Props> = ({ currentUser }) => {
           ...payload,
           updatedAt: serverTimestamp(),
         });
+        void upsertStudentVerification({ id: editingId, ...payload } as StudentRecord);
         notify('শিক্ষার্থীর তথ্য সফলভাবে হালনাগাদ হয়েছে।', 'success');
       } else {
         const id = makeSafeDocId('stu');
@@ -286,6 +293,7 @@ export const StudentsModule: React.FC<Props> = ({ currentUser }) => {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
+        void upsertStudentVerification({ id, ...payload } as StudentRecord);
         notify('নতুন শিক্ষার্থী সফলভাবে নিবন্ধিত হয়েছে।', 'success');
       }
       resetForm();
@@ -308,6 +316,7 @@ export const StudentsModule: React.FC<Props> = ({ currentUser }) => {
     if (!ok) return;
     try {
       await deleteDoc(doc(db, 'students', s.id));
+      void deleteStudentVerification(s.studentIdCode);
       notify('শিক্ষার্থীর রেকর্ড মুছে ফেলা হয়েছে।', 'success');
     } catch (err) {
       notify('রেকর্ড মুছতে সমস্যা হয়েছে।', 'error');
@@ -333,12 +342,14 @@ export const StudentsModule: React.FC<Props> = ({ currentUser }) => {
           className: nextClass,
           updatedAt: serverTimestamp(),
         });
+        void upsertStudentVerification({ ...s, className: nextClass });
         notify(`${s.name}-কে ${labelClass(nextClass)}-তে প্রমোশন দেওয়া হয়েছে।`, 'success');
       } else {
         await updateDoc(doc(db, 'students', s.id), {
           status: 'Graduated',
           updatedAt: serverTimestamp(),
         });
+        void upsertStudentVerification({ ...s, status: 'Graduated' });
         notify(`${s.name}-কে উত্তীর্ণ (Graduated) হিসেবে হালনাগাদ করা হয়েছে।`, 'success');
       }
     } catch (err) {
@@ -433,37 +444,37 @@ export const StudentsModule: React.FC<Props> = ({ currentUser }) => {
       />
 
       {/* Quick KPI Strip */}
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
-        <div className="flex items-center gap-3 rounded-2xl border border-[#DCE8E1] bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#087F5B]/12 text-[#087F5B] dark:bg-emerald-500/20 dark:text-emerald-300">
-            <Users className="h-5 w-5" />
+      <div className="grid grid-cols-3 gap-2 sm:gap-3.5">
+        <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-[#DCE8E1] bg-white p-2.5 text-center shadow-2xs sm:flex-row sm:gap-3 sm:p-4 sm:text-left dark:border-slate-800 dark:bg-slate-900">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#087F5B]/12 text-[#087F5B] sm:h-10 sm:w-10 dark:bg-emerald-500/20 dark:text-emerald-300">
+            <Users className="h-4 w-4 sm:h-5 sm:w-5" />
           </span>
-          <div>
-            <p className="text-xs font-medium text-[#526B78] dark:text-slate-400">মোট শিক্ষার্থী</p>
-            <p className="text-xl font-extrabold text-[#123B67] tabular-nums dark:text-white">
-              {toBnDigits(students.length)} জন
+          <div className="min-w-0">
+            <p className="truncate text-[10px] font-medium text-[#526B78] sm:text-xs dark:text-slate-400">মোট শিক্ষার্থী</p>
+            <p className="text-base font-extrabold text-[#123B67] tabular-nums sm:text-xl dark:text-white">
+              {toBnDigits(students.length)} <span className="hidden sm:inline">জন</span>
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-2xl border border-[#DCE8E1] bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#21A9D6]/15 text-[#0E7DA3] dark:bg-sky-500/20 dark:text-sky-300">
-            <UserCheck className="h-5 w-5" />
+        <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-[#DCE8E1] bg-white p-2.5 text-center shadow-2xs sm:flex-row sm:gap-3 sm:p-4 sm:text-left dark:border-slate-800 dark:bg-slate-900">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#21A9D6]/15 text-[#0E7DA3] sm:h-10 sm:w-10 dark:bg-sky-500/20 dark:text-sky-300">
+            <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
           </span>
-          <div>
-            <p className="text-xs font-medium text-[#526B78] dark:text-slate-400">সক্রিয় শিক্ষার্থী</p>
-            <p className="text-xl font-extrabold text-[#087F5B] tabular-nums dark:text-emerald-400">
-              {toBnDigits(activeCount)} জন
+          <div className="min-w-0">
+            <p className="truncate text-[10px] font-medium text-[#526B78] sm:text-xs dark:text-slate-400">সক্রিয়</p>
+            <p className="text-base font-extrabold text-[#087F5B] tabular-nums sm:text-xl dark:text-emerald-400">
+              {toBnDigits(activeCount)} <span className="hidden sm:inline">জন</span>
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-2xl border border-[#DCE8E1] bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#805AD5]/15 text-[#805AD5] dark:bg-purple-500/20 dark:text-purple-300">
-            <GraduationCap className="h-5 w-5" />
+        <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-[#DCE8E1] bg-white p-2.5 text-center shadow-2xs sm:flex-row sm:gap-3 sm:p-4 sm:text-left dark:border-slate-800 dark:bg-slate-900">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#805AD5]/15 text-[#805AD5] sm:h-10 sm:w-10 dark:bg-purple-500/20 dark:text-purple-300">
+            <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
           </span>
-          <div>
-            <p className="text-xs font-medium text-[#526B78] dark:text-slate-400">উত্তীর্ণ / প্রাক্তন</p>
-            <p className="text-xl font-extrabold text-[#805AD5] tabular-nums dark:text-purple-300">
-              {toBnDigits(graduatedCount)} জন
+          <div className="min-w-0">
+            <p className="truncate text-[10px] font-medium text-[#526B78] sm:text-xs dark:text-slate-400">প্রাক্তন</p>
+            <p className="text-base font-extrabold text-[#805AD5] tabular-nums sm:text-xl dark:text-purple-300">
+              {toBnDigits(graduatedCount)} <span className="hidden sm:inline">জন</span>
             </p>
           </div>
         </div>
@@ -485,7 +496,7 @@ export const StudentsModule: React.FC<Props> = ({ currentUser }) => {
             </div>
             <div>
               <label className="mb-1 block text-xs font-bold text-[#263B35] dark:text-slate-300">রোল নম্বর *</label>
-              <input required value={form.rollNumber} onChange={(e) => setForm({ ...form, rollNumber: e.target.value })} className={INPUT_CLS} />
+              <input required inputMode="numeric" value={form.rollNumber} onChange={(e) => setForm({ ...form, rollNumber: e.target.value })} className={INPUT_CLS} />
             </div>
             <div className="sm:col-span-2">
               <label className="mb-1 block text-xs font-bold text-[#263B35] dark:text-slate-300">শিক্ষার্থীর পূর্ণ নাম *</label>
@@ -553,15 +564,20 @@ export const StudentsModule: React.FC<Props> = ({ currentUser }) => {
             </div>
             <div>
               <label className="mb-1 block text-xs font-bold text-[#263B35] dark:text-slate-300">অভিভাবকের মোবাইল *</label>
-              <input required value={form.guardianPhone} onChange={(e) => setForm({ ...form, guardianPhone: e.target.value })} className={INPUT_CLS} />
+              <input required type="tel" inputMode="tel" value={form.guardianPhone} onChange={(e) => setForm({ ...form, guardianPhone: e.target.value })} className={INPUT_CLS} />
             </div>
             <div>
               <label className="mb-1 block text-xs font-bold text-[#263B35] dark:text-slate-300">রক্তের গ্রুপ</label>
               <input value={form.bloodGroup} onChange={(e) => setForm({ ...form, bloodGroup: e.target.value })} className={INPUT_CLS} />
             </div>
-            <div>
-              <label className="mb-1 block text-xs font-bold text-[#263B35] dark:text-slate-300">ছবির লিংক</label>
-              <input value={form.photoUrl} onChange={(e) => setForm({ ...form, photoUrl: e.target.value })} className={INPUT_CLS} />
+            <div className="sm:col-span-2 lg:col-span-4">
+              <ImageUploadField
+                label="শিক্ষার্থীর ছবি (কম্পিউটার বা মোবাইল থেকে আপলোড করুন)"
+                value={form.photoUrl}
+                onChange={(url) => setForm({ ...form, photoUrl: url })}
+                preset="portrait"
+                helperText="পাসপোর্ট সাইজের ছবি দিলে প্রবেশপত্র, আইডি কার্ড ও অনলাইন যাচাই পেজে দেখাবে"
+              />
             </div>
             <div className="sm:col-span-2 lg:col-span-4">
               <label className="mb-1 block text-xs font-bold text-[#263B35] dark:text-slate-300">ঠিকানা</label>
@@ -588,13 +604,13 @@ export const StudentsModule: React.FC<Props> = ({ currentUser }) => {
       )}
 
       {/* Class Quick-Filter Tabs & Instant Search */}
-      <div className="space-y-3 rounded-2xl border border-[#DCE8E1] bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
+      <div className="space-y-3 rounded-2xl border border-[#DCE8E1] bg-white p-3.5 shadow-2xs sm:p-4 dark:border-slate-800 dark:bg-slate-900">
         {/* Interactive Class Buttons */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar sm:flex-wrap sm:overflow-visible sm:pb-0">
           <button
             type="button"
             onClick={() => setClassFilter('সকল')}
-            className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition ${
+            className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap transition ${
               classFilter === 'সকল'
                 ? 'bg-[#123B67] text-white shadow-xs'
                 : 'bg-[#F2F8F5] text-[#263B35] hover:bg-[#E1EFE8] dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
@@ -611,7 +627,7 @@ export const StudentsModule: React.FC<Props> = ({ currentUser }) => {
                 key={c}
                 type="button"
                 onClick={() => setClassFilter(c)}
-                className={`rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap tabular-nums transition ${
+                className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold whitespace-nowrap tabular-nums transition ${
                   active
                     ? 'bg-[#087F5B] text-white shadow-xs'
                     : 'bg-[#F2F8F5] text-[#263B35] hover:bg-[#E1EFE8] dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
@@ -624,8 +640,8 @@ export const StudentsModule: React.FC<Props> = ({ currentUser }) => {
         </div>
 
         {/* Search & Secondary Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-[240px] flex-1">
+        <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+          <div className="relative col-span-2 min-w-0 sm:min-w-[240px] sm:flex-1">
             <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[#647E8B]" />
             <input
               value={search}
@@ -697,9 +713,114 @@ export const StudentsModule: React.FC<Props> = ({ currentUser }) => {
         )}
       </div>
 
-      {/* Students Table + Pagination */}
+      {/* Students Mobile Cards (< md) + Desktop Table (md+) */}
       <div className="overflow-hidden rounded-2xl border border-[#DCE8E1] bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="overflow-x-auto">
+        {/* Mobile App Card List */}
+        <div className="divide-y divide-[#EAF2ED] md:hidden dark:divide-slate-800">
+          {paged.length === 0 ? (
+            <p className="px-4 py-10 text-center text-xs text-[#587064] dark:text-slate-400">
+              কোনো শিক্ষার্থীর তথ্য পাওয়া যায়নি।
+            </p>
+          ) : (
+            paged.map((s) => (
+              <div key={s.id} className="space-y-2.5 p-3.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-md bg-[#E9F7F1] px-2 py-0.5 text-[10px] font-extrabold text-[#087F5B] tabular-nums dark:bg-emerald-500/20 dark:text-emerald-300">
+                        {s.studentIdCode}
+                      </span>
+                      <span className="rounded-md bg-[#EEF4FB] px-2 py-0.5 text-[10px] font-extrabold text-[#123B67] tabular-nums dark:bg-slate-800 dark:text-slate-200">
+                        রোল: {toBnDigits(s.rollNumber)}
+                      </span>
+                    </div>
+                    <p className="mt-1 truncate text-sm font-extrabold text-[#123B67] dark:text-white">
+                      {s.name}
+                    </p>
+                    {(s.fatherName || s.motherName) && (
+                      <p className="truncate text-[11px] text-[#526B78] dark:text-slate-400">
+                        পিতা: {s.fatherName || '—'} · মাতা: {s.motherName || '—'}
+                      </p>
+                    )}
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold ${
+                      s.status === 'Active'
+                        ? 'bg-[#EDF9F4] text-[#087F5B] dark:bg-emerald-500/20 dark:text-emerald-300'
+                        : s.status === 'Graduated'
+                        ? 'bg-[#F5F0FF] text-[#805AD5] dark:bg-purple-500/20 dark:text-purple-300'
+                        : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                    }`}
+                  >
+                    {STUDENT_STATUS_BN[s.status] || s.status}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 rounded-xl bg-[#F5F9F7] px-3 py-2 text-[11px] dark:bg-slate-800/70">
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-[#5A7380] dark:text-slate-400">শ্রেণি ও শাখা</p>
+                    <p className="truncate font-bold text-[#123B67] dark:text-slate-100">
+                      {labelClass(s.className)} ({labelSection(s.section)})
+                    </p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-[#5A7380] dark:text-slate-400">অভিভাবক</p>
+                    <a
+                      href={`tel:${s.guardianPhone}`}
+                      className="block truncate font-extrabold text-[#087F5B] tabular-nums dark:text-emerald-400"
+                    >
+                      {s.guardianPhone}
+                    </a>
+                  </div>
+                </div>
+
+                {isAdmin && (
+                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(`/dashboard/certificates?tab=admit&studentId=${s.id}`)
+                      }
+                      className="inline-flex min-h-[36px] flex-1 items-center justify-center gap-1 rounded-xl bg-[#FEF5E4] px-2.5 text-[11px] font-bold text-[#9A5B00] dark:bg-amber-500/20 dark:text-amber-300"
+                    >
+                      <FileBadge2 className="h-3.5 w-3.5" />
+                      প্রবেশপত্র
+                    </button>
+                    {s.status === 'Active' && (
+                      <button
+                        type="button"
+                        title="পরবর্তী শ্রেণিতে প্রমোশন দিন"
+                        onClick={() => void handlePromote(s)}
+                        className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-xl bg-[#EBF8FD] px-2.5 text-[#0E7DA3] dark:bg-sky-500/20 dark:text-sky-300"
+                      >
+                        <ArrowUpCircle className="h-4 w-4" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      title="সম্পাদনা করুন"
+                      onClick={() => openEdit(s)}
+                      className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-xl bg-[#EDF9F4] px-2.5 text-[#087F5B] dark:bg-emerald-500/20 dark:text-emerald-300"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      title="মুছে ফেলুন"
+                      onClick={() => void handleDelete(s)}
+                      className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-xl bg-rose-50 px-2.5 text-rose-600 dark:bg-rose-500/20 dark:text-rose-300"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[720px] text-left text-xs sm:text-sm">
             <thead className="bg-gradient-to-r from-[#123B67] to-[#087F5B] text-white">
               <tr>

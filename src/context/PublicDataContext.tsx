@@ -226,8 +226,8 @@ export const PublicDataProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               if (isLegacyRemovedImage(merged.principalPhotoUrl)) {
                 merged.principalPhotoUrl = '';
               }
-              if (isLegacyRemovedImage(merged.logoUrl)) {
-                merged.logoUrl = '';
+              if (!merged.logoUrl || isLegacyRemovedImage(merged.logoUrl)) {
+                merged.logoUrl = DEFAULT_SITE_SETTINGS.logoUrl;
               }
               setSettings(merged);
             }

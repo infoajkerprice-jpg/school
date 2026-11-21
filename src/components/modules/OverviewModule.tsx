@@ -395,37 +395,37 @@ export const OverviewModule: React.FC<Props> = ({ currentUser, onNavigateTab }) 
       </div>
 
       {/* ==================== 2. COLORFUL KPI STATISTICS CARDS ==================== */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
         {/* Card 1: Students (Green) */}
-        <div className="rounded-2xl border border-[#CBE9DC] bg-white p-4 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#4C6572] dark:text-slate-400">
+        <div className="rounded-2xl border border-[#CBE9DC] bg-white p-3 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[11px] font-bold text-[#4C6572] sm:text-xs dark:text-slate-400">
               {isAdmin || isTeacher ? 'মোট শিক্ষার্থী' : 'সংযুক্ত শিক্ষার্থী'}
             </span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#087F5B] text-white shadow-xs">
-              <GraduationCap className="h-5 w-5" />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#087F5B] text-white shadow-xs sm:h-10 sm:w-10">
+              <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </div>
-          <p className="mt-2.5 text-2xl font-extrabold text-[#123B67] tabular-nums dark:text-white">
+          <p className="mt-2 text-lg font-extrabold text-[#123B67] tabular-nums sm:mt-2.5 sm:text-2xl dark:text-white">
             {toBnDigits(students.length)}
           </p>
-          <p className="mt-1 text-[11px] font-medium text-[#087F5B] dark:text-emerald-400">
+          <p className="mt-0.5 truncate text-[10px] font-medium text-[#087F5B] sm:mt-1 sm:text-[11px] dark:text-emerald-400">
             ডাটাবেসে সক্রিয় নিবন্ধিত
           </p>
         </div>
 
         {/* Card 2: Teachers (Navy) */}
-        <div className="rounded-2xl border border-[#CBDDF0] bg-white p-4 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#4C6572] dark:text-slate-400">মোট শিক্ষক</span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#123B67] text-white shadow-xs">
-              <Users className="h-5 w-5" />
+        <div className="rounded-2xl border border-[#CBDDF0] bg-white p-3 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[11px] font-bold text-[#4C6572] sm:text-xs dark:text-slate-400">মোট শিক্ষক</span>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#123B67] text-white shadow-xs sm:h-10 sm:w-10">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </div>
-          <p className="mt-2.5 text-2xl font-extrabold text-[#123B67] tabular-nums dark:text-white">
+          <p className="mt-2 text-lg font-extrabold text-[#123B67] tabular-nums sm:mt-2.5 sm:text-2xl dark:text-white">
             {toBnDigits(faculty.length)}
           </p>
-          <p className="mt-1 text-[11px] font-medium text-[#5A7380] dark:text-slate-400">
+          <p className="mt-0.5 truncate text-[10px] font-medium text-[#5A7380] sm:mt-1 sm:text-[11px] dark:text-slate-400">
             {settings.totalStaffCount && settings.totalStaffCount > 0
               ? `কর্মচারী: ${toBnDigits(settings.totalStaffCount)} জন`
               : 'নিবন্ধিত শিক্ষকবৃন্দ'}
@@ -433,33 +433,33 @@ export const OverviewModule: React.FC<Props> = ({ currentUser, onNavigateTab }) 
         </div>
 
         {/* Card 3: Attendance (Sky Blue) */}
-        <div className="rounded-2xl border border-[#C2E9F6] bg-white p-4 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#4C6572] dark:text-slate-400">আজকের উপস্থিতি</span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#21A9D6] text-white shadow-xs">
-              <UserCheck className="h-5 w-5" />
+        <div className="rounded-2xl border border-[#C2E9F6] bg-white p-3 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[11px] font-bold text-[#4C6572] sm:text-xs dark:text-slate-400">আজকের উপস্থিতি</span>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#21A9D6] text-white shadow-xs sm:h-10 sm:w-10">
+              <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </div>
-          <p className="mt-2.5 text-2xl font-extrabold text-[#0E7DA3] tabular-nums dark:text-sky-300">
+          <p className="mt-2 text-lg font-extrabold text-[#0E7DA3] tabular-nums sm:mt-2.5 sm:text-2xl dark:text-sky-300">
             {toBnDigits(todayPresent)}
           </p>
-          <p className="mt-1 text-[11px] font-medium text-[#5A7380] dark:text-slate-400">
+          <p className="mt-0.5 truncate text-[10px] font-medium text-[#5A7380] sm:mt-1 sm:text-[11px] dark:text-slate-400">
             অনুপস্থিত: {toBnDigits(todayAbsent)} · রেকর্ড: {toBnDigits(attendance.length)}
           </p>
         </div>
 
         {/* Card 4: Notices & Classes (Purple) */}
-        <div className="rounded-2xl border border-[#DDD0F7] bg-white p-4 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#4C6572] dark:text-slate-400">মোট নোটিশ ও শ্রেণি</span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#805AD5] text-white shadow-xs">
-              <Bell className="h-5 w-5" />
+        <div className="rounded-2xl border border-[#DDD0F7] bg-white p-3 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between gap-1.5">
+            <span className="text-[11px] font-bold text-[#4C6572] sm:text-xs dark:text-slate-400">নোটিশ ও শ্রেণি</span>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#805AD5] text-white shadow-xs sm:h-10 sm:w-10">
+              <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </div>
-          <p className="mt-2.5 text-2xl font-extrabold text-[#6B46C1] tabular-nums dark:text-purple-300">
+          <p className="mt-2 text-lg font-extrabold text-[#6B46C1] tabular-nums sm:mt-2.5 sm:text-2xl dark:text-purple-300">
             {toBnDigits(notices.length)}
           </p>
-          <p className="mt-1 text-[11px] font-medium text-[#5A7380] dark:text-slate-400">
+          <p className="mt-0.5 truncate text-[10px] font-medium text-[#5A7380] sm:mt-1 sm:text-[11px] dark:text-slate-400">
             শ্রেণি: {toBnDigits(settings.totalClassesCount || 10)}টি · ফলাফল: {toBnDigits(results.length)}
           </p>
         </div>
@@ -467,65 +467,65 @@ export const OverviewModule: React.FC<Props> = ({ currentUser, onNavigateTab }) 
         {isAdmin && (
           <>
             {/* Card 5: Total Income (Green) */}
-            <div className="rounded-2xl border border-[#CBE9DC] bg-white p-4 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#4C6572] dark:text-slate-400">মোট আয় (ফি ও অন্যান্য)</span>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E9F7F1] text-[#087F5B] dark:bg-emerald-950/60 dark:text-emerald-300">
-                  <ArrowUpRight className="h-5 w-5" />
+            <div className="rounded-2xl border border-[#CBE9DC] bg-white p-3 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-[11px] font-bold text-[#4C6572] sm:text-xs dark:text-slate-400">মোট আয়</span>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#E9F7F1] text-[#087F5B] sm:h-10 sm:w-10 dark:bg-emerald-950/60 dark:text-emerald-300">
+                  <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </div>
-              <p className="mt-2.5 text-2xl font-extrabold text-[#087F5B] tabular-nums dark:text-emerald-400">
+              <p className="mt-2 truncate text-base font-extrabold text-[#087F5B] tabular-nums sm:mt-2.5 sm:text-2xl dark:text-emerald-400">
                 {formatBdtBn(totalCollected + otherIncome)}
               </p>
-              <p className="mt-1 text-[11px] font-medium text-[#5A7380] dark:text-slate-400">
+              <p className="mt-0.5 truncate text-[10px] font-medium text-[#5A7380] sm:mt-1 sm:text-[11px] dark:text-slate-400">
                 চলতি মাসে: {formatBdtBn(monthlyIncome)}
               </p>
             </div>
 
             {/* Card 6: Total Expenses (Rose) */}
-            <div className="rounded-2xl border border-rose-200 bg-white p-4 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#4C6572] dark:text-slate-400">মোট ব্যয় (বেতন ও খরচ)</span>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300">
-                  <ArrowDownRight className="h-5 w-5" />
+            <div className="rounded-2xl border border-rose-200 bg-white p-3 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-[11px] font-bold text-[#4C6572] sm:text-xs dark:text-slate-400">মোট ব্যয়</span>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 sm:h-10 sm:w-10 dark:bg-rose-950/60 dark:text-rose-300">
+                  <ArrowDownRight className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </div>
-              <p className="mt-2.5 text-2xl font-extrabold text-rose-600 tabular-nums dark:text-rose-400">
+              <p className="mt-2 truncate text-base font-extrabold text-rose-600 tabular-nums sm:mt-2.5 sm:text-2xl dark:text-rose-400">
                 {formatBdtBn(totalExpenses)}
               </p>
-              <p className="mt-1 text-[11px] font-medium text-[#5A7380] dark:text-slate-400">
+              <p className="mt-0.5 truncate text-[10px] font-medium text-[#5A7380] sm:mt-1 sm:text-[11px] dark:text-slate-400">
                 চলতি মাসে: {formatBdtBn(monthlyExpense)}
               </p>
             </div>
 
             {/* Card 7: Total Due (Orange) */}
-            <div className="rounded-2xl border border-[#F8DFAF] bg-white p-4 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#4C6572] dark:text-slate-400">মোট বকেয়া বেতন</span>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FEF5E4] text-[#B47009] dark:bg-amber-950/60 dark:text-amber-300">
-                  <AlertCircle className="h-5 w-5" />
+            <div className="rounded-2xl border border-[#F8DFAF] bg-white p-3 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-[11px] font-bold text-[#4C6572] sm:text-xs dark:text-slate-400">বকেয়া বেতন</span>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#FEF5E4] text-[#B47009] sm:h-10 sm:w-10 dark:bg-amber-950/60 dark:text-amber-300">
+                  <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </div>
-              <p className="mt-2.5 text-2xl font-extrabold text-[#B47009] tabular-nums dark:text-amber-300">
+              <p className="mt-2 truncate text-base font-extrabold text-[#B47009] tabular-nums sm:mt-2.5 sm:text-2xl dark:text-amber-300">
                 {formatBdtBn(totalDue)}
               </p>
-              <p className="mt-1 text-[11px] font-medium text-[#5A7380] dark:text-slate-400">
+              <p className="mt-0.5 truncate text-[10px] font-medium text-[#5A7380] sm:mt-1 sm:text-[11px] dark:text-slate-400">
                 আদায়কৃত ফি: {formatBdtBn(totalCollected)}
               </p>
             </div>
 
             {/* Card 8: Admissions (Orange Accent) */}
-            <div className="rounded-2xl border border-[#F8DFAF] bg-white p-4 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#4C6572] dark:text-slate-400">নতুন ভর্তি আবেদন</span>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F4A62A] text-[#123B67] shadow-xs">
-                  <UserPlus className="h-5 w-5" />
+            <div className="rounded-2xl border border-[#F8DFAF] bg-white p-3 shadow-xs transition hover:-translate-y-0.5 hover:shadow-md sm:p-4 dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-[11px] font-bold text-[#4C6572] sm:text-xs dark:text-slate-400">ভর্তি আবেদন</span>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#F4A62A] text-[#123B67] shadow-xs sm:h-10 sm:w-10">
+                  <UserPlus className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </div>
-              <p className="mt-2.5 text-2xl font-extrabold text-[#123B67] tabular-nums dark:text-white">
+              <p className="mt-2 text-lg font-extrabold text-[#123B67] tabular-nums sm:mt-2.5 sm:text-2xl dark:text-white">
                 {toBnDigits(pendingAdmissions)}
               </p>
-              <p className="mt-1 text-[11px] font-medium text-[#5A7380] dark:text-slate-400">
+              <p className="mt-0.5 truncate text-[10px] font-medium text-[#5A7380] sm:mt-1 sm:text-[11px] dark:text-slate-400">
                 সর্বমোট আবেদন: {toBnDigits(admissions.length)}টি
               </p>
             </div>
@@ -534,32 +534,32 @@ export const OverviewModule: React.FC<Props> = ({ currentUser, onNavigateTab }) 
 
         {(isStudent || isParent) && (
           <>
-            <div className="rounded-2xl border border-[#CBE9DC] bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#4C6572] dark:text-slate-400">পরিশোধিত বেতন ও ফি</span>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#087F5B] text-white">
-                  <Wallet className="h-5 w-5" />
+            <div className="rounded-2xl border border-[#CBE9DC] bg-white p-3 shadow-xs sm:p-4 dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-[11px] font-bold text-[#4C6572] sm:text-xs dark:text-slate-400">পরিশোধিত ফি</span>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#087F5B] text-white sm:h-10 sm:w-10">
+                  <Wallet className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </div>
-              <p className="mt-2.5 text-2xl font-extrabold text-[#087F5B] tabular-nums dark:text-emerald-400">
+              <p className="mt-2 truncate text-base font-extrabold text-[#087F5B] tabular-nums sm:mt-2.5 sm:text-2xl dark:text-emerald-400">
                 {formatBdtBn(totalCollected)}
               </p>
-              <p className="mt-1 text-[11px] font-medium text-[#5A7380] dark:text-slate-400">
+              <p className="mt-0.5 truncate text-[10px] font-medium text-[#5A7380] sm:mt-1 sm:text-[11px] dark:text-slate-400">
                 বকেয়া: {formatBdtBn(totalDue)}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-[#DDD0F7] bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#4C6572] dark:text-slate-400">প্রকাশিত ফলাফল</span>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#805AD5] text-white">
-                  <ClipboardCheck className="h-5 w-5" />
+            <div className="rounded-2xl border border-[#DDD0F7] bg-white p-3 shadow-xs sm:p-4 dark:border-slate-800 dark:bg-slate-900">
+              <div className="flex items-center justify-between gap-1.5">
+                <span className="text-[11px] font-bold text-[#4C6572] sm:text-xs dark:text-slate-400">প্রকাশিত ফলাফল</span>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#805AD5] text-white sm:h-10 sm:w-10">
+                  <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
               </div>
-              <p className="mt-2.5 text-2xl font-extrabold text-[#123B67] tabular-nums dark:text-white">
+              <p className="mt-2 text-lg font-extrabold text-[#123B67] tabular-nums sm:mt-2.5 sm:text-2xl dark:text-white">
                 {toBnDigits(results.length)}
               </p>
-              <p className="mt-1 text-[11px] font-medium text-[#5A7380] dark:text-slate-400">
+              <p className="mt-0.5 truncate text-[10px] font-medium text-[#5A7380] sm:mt-1 sm:text-[11px] dark:text-slate-400">
                 নোটিশ: {toBnDigits(notices.length)}টি
               </p>
             </div>
@@ -573,7 +573,7 @@ export const OverviewModule: React.FC<Props> = ({ currentUser, onNavigateTab }) 
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-extrabold text-[#123B67] dark:text-white">দ্রুত অ্যাকশন</h3>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
             {quickActions.map((act) => {
               const Icon = act.icon;
               return (
@@ -581,18 +581,18 @@ export const OverviewModule: React.FC<Props> = ({ currentUser, onNavigateTab }) 
                   key={act.id}
                   type="button"
                   onClick={() => onNavigateTab(act.id)}
-                  className={`group flex items-center gap-3 rounded-2xl border bg-gradient-to-br p-3.5 text-left shadow-2xs transition hover:-translate-y-0.5 hover:shadow-md ${act.bg}`}
+                  className={`group flex items-center gap-2.5 rounded-2xl border bg-gradient-to-br p-3 text-left shadow-2xs transition hover:-translate-y-0.5 hover:shadow-md sm:gap-3 sm:p-3.5 ${act.bg}`}
                 >
                   <span
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-xs transition-transform group-hover:scale-105 ${act.iconBg}`}
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl shadow-xs transition-transform group-hover:scale-105 sm:h-10 sm:w-10 ${act.iconBg}`}
                   >
-                    <Icon className="h-5 w-5" />
+                    <Icon className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                   </span>
                   <div className="min-w-0">
                     <p className="truncate text-xs font-extrabold text-[#123B67] dark:text-white">
                       {act.label}
                     </p>
-                    <p className="truncate text-[11px] font-medium text-[#566F7C] dark:text-slate-400">
+                    <p className="truncate text-[10.5px] font-medium text-[#566F7C] sm:text-[11px] dark:text-slate-400">
                       {act.desc}
                     </p>
                   </div>
@@ -604,9 +604,9 @@ export const OverviewModule: React.FC<Props> = ({ currentUser, onNavigateTab }) 
       )}
 
       {/* ==================== 4. TWO INTERACTIVE CHARTS ==================== */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-12">
         {/* Chart 1: Student Distribution by Class */}
-        <div className="rounded-2xl border border-[#D4E6DD] bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 lg:col-span-7">
+        <div className="rounded-2xl border border-[#D4E6DD] bg-white p-3.5 shadow-xs sm:p-5 dark:border-slate-800 dark:bg-slate-900 lg:col-span-7">
           <div className="mb-4 flex items-center justify-between gap-2">
             <div>
               <h3 className="text-base font-extrabold text-[#123B67] dark:text-white">

@@ -209,62 +209,42 @@ export const MarksheetTemplate = React.forwardRef<
         </g>
       </svg>
 
-      {/* ==================== FAINT CENTER INSTITUTIONAL SEAL WATERMARK ==================== */}
-      <svg
-        viewBox="0 0 260 260"
+      {/* ==================== FAINT CENTER INSTITUTIONAL LOGO WATERMARK ==================== */}
+      <img
+        src="/school-logo.png"
+        alt=""
         style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -44%)',
-          width: '295px',
-          height: '295px',
+          width: '285px',
+          height: '285px',
+          objectFit: 'contain',
           pointerEvents: 'none',
-          opacity: 0.075,
+          opacity: 0.085,
         }}
-      >
-        <circle cx="130" cy="130" r="122" fill="none" stroke="#006BB3" strokeWidth="5" />
-        <circle cx="130" cy="130" r="108" fill="none" stroke="#006BB3" strokeWidth="2" />
-        <circle cx="130" cy="130" r="72" fill="none" stroke="#006BB3" strokeWidth="2" />
-        <path
-          d="M88,136 Q109,122 130,134 Q151,122 172,136 L172,164 Q151,150 130,162 Q109,150 88,164 Z"
-          fill="none"
-          stroke="#006BB3"
-          strokeWidth="3.5"
-        />
-        <line x1="130" y1="134" x2="130" y2="162" stroke="#006BB3" strokeWidth="2.5" />
-        <text
-          x="130"
-          y="96"
-          textAnchor="middle"
-          fontSize="16"
-          fontWeight="700"
-          fontFamily={kalpurushFont}
-          fill="#006BB3"
-        >
-          স্থাপিত · ২০১৯
-        </text>
-        <text
-          x="130"
-          y="206"
-          textAnchor="middle"
-          fontSize="14"
-          fontWeight="700"
-          fontFamily={kalpurushFont}
-          fill="#006BB3"
-        >
-          {schoolName}
-        </text>
-      </svg>
+      />
 
       {/* ==================== FOREGROUND CONTENT ==================== */}
       <div style={{ position: 'relative', zIndex: 2 }}>
         {/* 1. TOP INSTITUTION NAME & SINGLE EXAM RIBBON */}
         <div style={{ textAlign: 'center', marginBottom: '14px' }}>
+          <img
+            src="/school-logo.png"
+            alt={schoolName}
+            style={{
+              width: '58px',
+              height: '58px',
+              objectFit: 'contain',
+              margin: '0 auto 6px',
+              display: 'block',
+            }}
+          />
           <h1
             style={{
               margin: 0,
-              fontSize: '36px',
+              fontSize: '34px',
               fontWeight: 700,
               color: darkBlue,
               letterSpacing: '0.2px',

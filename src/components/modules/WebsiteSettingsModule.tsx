@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db, handleFirestoreError, makeSafeDocId, OperationType } from '../../lib/firebase';
 import { clampStr } from '../../lib/grading';
+import { MAX_BANNER_IMAGE_LEN, sanitizeImageUrlForFirestore } from '../../lib/imageUpload';
 import { toBnDigits } from '../../i18n';
 import {
   CAMPUS_IMAGES,
@@ -21,6 +22,7 @@ import {
 } from '../../types';
 import { isLegacyRemovedImage } from '../../context/PublicDataContext';
 import { buildValidatedSiteSettingsPayload } from './InstitutionInfoModule';
+import { ImageUploadField } from '../ImageUploadField';
 import { useUIFeedback } from '../ToastContext';
 
 interface Props {
@@ -116,7 +118,7 @@ export const WebsiteSettingsModule: React.FC<Props> = ({ currentUser }) => {
       await setDoc(doc(db, 'slides', id), {
         title: clampStr(slideForm.title, 180),
         subtitle: clampStr(slideForm.subtitle, 280),
-        imageUrl: clampStr(slideForm.imageUrl, 500),
+        imageUrl: sanitizeImageUrlForFirestore(slideForm.imageUrl, MAX_BANNER_IMAGE_LEN),
         orderIndex: Math.max(0, Math.min(500, Number(slideForm.orderIndex) || slides.length + 1)),
         isActive: slideForm.isActive,
         authorUid: currentUser.uid,
@@ -223,23 +225,14 @@ export const WebsiteSettingsModule: React.FC<Props> = ({ currentUser }) => {
               className={inputClass}
             />
           </div>
-          <div>
-            <label className={labelClass}>লোগো ছবির লিংক (ঐচ্ছিক)</label>
-            <div className="flex items-center gap-2.5">
-              <input
-                value={settings.logoUrl || ''}
-                onChange={(e) => setSettings({ ...settings, logoUrl: e.target.value })}
-                placeholder="খালি রাখলে ডিফল্ট মনোগ্রাম দেখাবে"
-                className={inputClass}
-              />
-              {settings.logoUrl && (
-                <img
-                  src={settings.logoUrl}
-                  alt="Logo preview"
-                  className="h-10 w-10 shrink-0 rounded-xl border border-[#D4E6DD] object-cover"
-                />
-              )}
-            </div>
+          <div className="sm:col-span-2 lg:col-span-3">
+            <ImageUploadField
+              label="প্রতিষ্ঠানের লোগো আপলোড (ঐচ্ছিক)"
+              value={settings.logoUrl || ''}
+              onChange={(url) => setSettings({ ...settings, logoUrl: url })}
+              preset="logo"
+              helperText="PNG বা JPG লোগো আপলোড করুন; খালি রাখলে অফিসিয়াল ডিফল্ট লোগো দেখাবে"
+            />
           </div>
           <div>
             <label className={labelClass}>EIIN নম্বর (ঐচ্ছিক)</label>
@@ -290,22 +283,14 @@ export const WebsiteSettingsModule: React.FC<Props> = ({ currentUser }) => {
               className={inputClass}
             />
           </div>
-          <div>
-            <label className={labelClass}>ক্যাম্পাস ছবির লিংক ও প্রিভিউ</label>
-            <div className="flex items-center gap-2.5">
-              <input
-                value={settings.aboutImageUrl || ''}
-                onChange={(e) => setSettings({ ...settings, aboutImageUrl: e.target.value })}
-                className={inputClass}
-              />
-              {settings.aboutImageUrl && (
-                <img
-                  src={settings.aboutImageUrl}
-                  alt="About preview"
-                  className="h-10 w-14 shrink-0 rounded-lg border border-[#D4E6DD] object-cover"
-                />
-              )}
-            </div>
+          <div className="sm:col-span-2">
+            <ImageUploadField
+              label="ক্যাম্পাস পরিচিতি ছবি আপলোড"
+              value={settings.aboutImageUrl || ''}
+              onChange={(url) => setSettings({ ...settings, aboutImageUrl: url })}
+              preset="banner"
+              quickPresets={CAMPUS_PRESETS}
+            />
           </div>
           <div className="sm:col-span-2">
             <label className={labelClass}>প্রতিষ্ঠানের পরিচিতি</label>
@@ -356,22 +341,13 @@ export const WebsiteSettingsModule: React.FC<Props> = ({ currentUser }) => {
               className={inputClass}
             />
           </div>
-          <div>
-            <label className={labelClass}>ছবির লিংক ও প্রিভিউ</label>
-            <div className="flex items-center gap-2.5">
-              <input
-                value={settings.principalPhotoUrl || ''}
-                onChange={(e) => setSettings({ ...settings, principalPhotoUrl: e.target.value })}
-                className={inputClass}
-              />
-              {settings.principalPhotoUrl && (
-                <img
-                  src={settings.principalPhotoUrl}
-                  alt="Principal preview"
-                  className="h-10 w-10 shrink-0 rounded-lg border border-[#D4E6DD] object-cover"
-                />
-              )}
-            </div>
+          <div className="sm:col-span-3">
+            <ImageUploadField
+              label="অধ্যক্ষ / প্রধান শিক্ষকের ছবি আপলোড"
+              value={settings.principalPhotoUrl || ''}
+              onChange={(url) => setSettings({ ...settings, principalPhotoUrl: url })}
+              preset="portrait"
+            />
           </div>
           <div className="sm:col-span-3">
             <label className={labelClass}>বক্তব্য / বাণী</label>
@@ -511,28 +487,14 @@ export const WebsiteSettingsModule: React.FC<Props> = ({ currentUser }) => {
               />
             </div>
             <div className="sm:col-span-2">
-              <label className={labelClass}>ছবির লিংক (URL) *</label>
-              <input
-                required
+              <ImageUploadField
+                label="স্লাইডার ছবি আপলোড (কম্পিউটার বা মোবাইল)"
                 value={slideForm.imageUrl}
-                onChange={(e) => setSlideForm({ ...slideForm, imageUrl: e.target.value })}
-                className={inputClass}
+                onChange={(url) => setSlideForm({ ...slideForm, imageUrl: url })}
+                preset="banner"
+                required
+                quickPresets={CAMPUS_PRESETS}
               />
-              <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                <span className="text-[11px] font-semibold text-[#5C7582] dark:text-slate-400">
-                  দ্রুত ক্যাম্পাস ছবি:
-                </span>
-                {CAMPUS_PRESETS.map((p) => (
-                  <button
-                    key={p.label}
-                    type="button"
-                    onClick={() => setSlideForm({ ...slideForm, imageUrl: p.url })}
-                    className="rounded-lg border border-[#D4E6DD] bg-[#F2F8F5] px-2.5 py-1 text-[11px] font-bold text-[#123B67] transition hover:border-[#087F5B] hover:bg-[#087F5B] hover:text-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
             </div>
             <div>
               <label className={labelClass}>ক্রম (Order)</label>

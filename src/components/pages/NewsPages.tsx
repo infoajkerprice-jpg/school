@@ -49,7 +49,7 @@ export const NewsPage: React.FC = () => {
   const gridArticles = leadArticle ? filtered.slice(1) : filtered;
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-4 sm:space-y-7">
       <PageHeader
         breadcrumbs={[{ label: 'সংবাদ ও কার্যক্রম' }]}
         badge={`প্রকাশিত প্রতিবেদন: ${toBnDigits(news.length)} টি`}
@@ -70,13 +70,13 @@ export const NewsPage: React.FC = () => {
             className="w-full rounded-xl border border-[#CBE0D6] bg-[#F8FBF9] py-2.5 pr-3.5 pl-10 text-sm text-[#263B35] focus:border-[#805AD5] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#805AD5]/20"
           />
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex w-full gap-1.5 overflow-x-auto no-scrollbar sm:w-auto sm:flex-wrap">
           {categories.map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setCategory(cat)}
-              className={`rounded-xl px-3.5 py-2 text-xs font-bold transition ${
+              className={`shrink-0 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
                 category === cat
                   ? 'bg-[#805AD5] text-white shadow-xs'
                   : 'bg-[#F2F8F5] text-[#123B67] hover:bg-[#E1F2E8]'
@@ -284,7 +284,7 @@ export const NewsDetailPage: React.FC = () => {
   const title = article.titleBn || article.title;
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-4 sm:space-y-7">
       <PageHeader
         breadcrumbs={[
           { label: 'সংবাদ ও কার্যক্রম', to: '/news' },

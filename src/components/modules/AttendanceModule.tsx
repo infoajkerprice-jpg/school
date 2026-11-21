@@ -225,11 +225,11 @@ export const AttendanceModule: React.FC<Props> = ({ currentUser }) => {
       />
 
       {canMark && (
-        <div className="rounded-2xl border border-[#DCE8E1] bg-white p-5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-[#E6F0EA] pb-4 dark:border-slate-800">
-            <div className="flex flex-wrap items-center gap-3">
-              <div>
-                <label className="mb-1.5 block text-xs font-bold text-[#263B35] dark:text-slate-300">তারিখ</label>
+        <div className="rounded-2xl border border-[#DCE8E1] bg-white p-3.5 shadow-2xs sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+          <div className="mb-4 flex flex-col gap-3 border-b border-[#E6F0EA] pb-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between dark:border-slate-800">
+            <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+              <div className="col-span-2 sm:col-span-1">
+                <label className="mb-1 block text-xs font-bold text-[#263B35] dark:text-slate-300">তারিখ</label>
                 <input
                   type="date"
                   value={selectedDate}
@@ -237,18 +237,18 @@ export const AttendanceModule: React.FC<Props> = ({ currentUser }) => {
                     setSelectedDate(e.target.value);
                     setDraftStatus({});
                   }}
-                  className="rounded-xl border border-[#CFE0D6] bg-white px-3 py-2 text-xs font-bold text-[#123B67] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="min-h-[42px] w-full rounded-xl border border-[#CFE0D6] bg-white px-3 py-2 text-xs font-bold text-[#123B67] sm:min-h-0 sm:w-auto dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-bold text-[#263B35] dark:text-slate-300">শ্রেণি</label>
+                <label className="mb-1 block text-xs font-bold text-[#263B35] dark:text-slate-300">শ্রেণি</label>
                 <select
                   value={selectedClass}
                   onChange={(e) => {
                     setSelectedClass(e.target.value);
                     setDraftStatus({});
                   }}
-                  className="rounded-xl border border-[#CFE0D6] bg-white px-3 py-2 text-xs font-bold text-[#123B67] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="min-h-[42px] w-full rounded-xl border border-[#CFE0D6] bg-white px-3 py-2 text-xs font-bold text-[#123B67] sm:min-h-0 sm:w-auto dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
                   {BD_CLASSES.map((c) => (
                     <option key={c} value={c}>
@@ -258,14 +258,14 @@ export const AttendanceModule: React.FC<Props> = ({ currentUser }) => {
                 </select>
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-bold text-[#263B35] dark:text-slate-300">শাখা</label>
+                <label className="mb-1 block text-xs font-bold text-[#263B35] dark:text-slate-300">শাখা</label>
                 <select
                   value={selectedSection}
                   onChange={(e) => {
                     setSelectedSection(e.target.value);
                     setDraftStatus({});
                   }}
-                  className="rounded-xl border border-[#CFE0D6] bg-white px-3 py-2 text-xs font-bold text-[#123B67] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="min-h-[42px] w-full rounded-xl border border-[#CFE0D6] bg-white px-3 py-2 text-xs font-bold text-[#123B67] sm:min-h-0 sm:w-auto dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
                   {BD_SECTIONS.map((s) => (
                     <option key={s} value={s}>
@@ -280,7 +280,7 @@ export const AttendanceModule: React.FC<Props> = ({ currentUser }) => {
               type="button"
               disabled={saving || classStudents.length === 0}
               onClick={handleSaveBatch}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-[#087F5B] px-5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#06684A] disabled:opacity-50"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl bg-[#087F5B] px-5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#06684A] disabled:opacity-50 sm:min-h-0 sm:w-auto"
             >
               <Save className="h-4 w-4" />
               {saving ? 'সংরক্ষণ হচ্ছে...' : 'হাজিরা সংরক্ষণ করুন'}
@@ -338,8 +338,8 @@ export const AttendanceModule: React.FC<Props> = ({ currentUser }) => {
       )}
 
       {/* Search History */}
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#DCE8E1] bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="relative min-w-[220px] flex-1">
+      <div className="flex flex-col gap-2.5 rounded-2xl border border-[#DCE8E1] bg-white p-3.5 shadow-2xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 dark:border-slate-800 dark:bg-slate-900">
+        <div className="relative min-w-0 flex-1 sm:min-w-[220px]">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[#647B86] dark:text-slate-400" />
           <input
             value={searchTerm}
@@ -348,14 +348,51 @@ export const AttendanceModule: React.FC<Props> = ({ currentUser }) => {
             className="w-full rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] py-2 pr-3 pl-10 text-xs text-[#263B35] outline-none focus:border-[#087F5B] focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
           />
         </div>
-        <span className="rounded-xl bg-[#087F5B]/10 px-3 py-2 text-xs font-bold text-[#087F5B] tabular-nums dark:bg-emerald-500/20 dark:text-emerald-300">
+        <span className="self-start rounded-xl bg-[#087F5B]/10 px-3 py-2 text-xs font-bold text-[#087F5B] tabular-nums sm:self-auto dark:bg-emerald-500/20 dark:text-emerald-300">
           মোট ইতিহাস: {toBnDigits(filteredRecords.length)}টি
         </span>
       </div>
 
-      {/* Attendance History Table */}
+      {/* Attendance History Mobile Cards (< md) + Desktop Table (md+) */}
       <div className="overflow-hidden rounded-2xl border border-[#DCE8E1] bg-white shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="overflow-x-auto">
+        <div className="divide-y divide-[#EAF2ED] md:hidden dark:divide-slate-800">
+          {paginatedRecords.length === 0 ? (
+            <p className="px-4 py-10 text-center text-xs text-[#587064] dark:text-slate-400">
+              কোনো উপস্থিতির রেকর্ড পাওয়া যায়নি।
+            </p>
+          ) : (
+            paginatedRecords.map((r) => (
+              <div key={r.id} className="flex items-center justify-between gap-2.5 p-3.5">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-extrabold text-[#123B67] dark:text-white">
+                    {r.studentName}
+                  </p>
+                  <p className="mt-0.5 text-[11px] font-semibold text-[#526B78] tabular-nums dark:text-slate-400">
+                    {labelClass(r.className)} ({labelSection(r.section)}) · রোল {toBnDigits(r.rollNumber)}
+                  </p>
+                  <p className="mt-0.5 text-[10.5px] font-bold text-[#087F5B] tabular-nums dark:text-emerald-400">
+                    তারিখ: {toBnDigits(r.date)}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] font-bold ${
+                    r.status === 'Present'
+                      ? 'bg-[#087F5B]/12 text-[#087F5B] dark:bg-emerald-500/20 dark:text-emerald-300'
+                      : r.status === 'Absent'
+                      ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
+                      : r.status === 'Leave'
+                      ? 'bg-[#21A9D6]/15 text-[#0E7DA3] dark:bg-cyan-500/20 dark:text-cyan-300'
+                      : 'bg-[#F4A62A]/20 text-[#9A5B00] dark:bg-amber-500/20 dark:text-amber-300'
+                  }`}
+                >
+                  {ATTENDANCE_STATUS_BN[r.status] || r.status}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-left text-xs sm:text-sm">
             <thead className="bg-[#123B67] text-white dark:bg-slate-800">
               <tr>

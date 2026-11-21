@@ -137,6 +137,7 @@ const ACADEMIC_DROPDOWN: DropdownSubItem[] = [
 export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
   const { settings, notices } = usePublicData();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileNotifOpen, setMobileNotifOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<'institution' | 'academic' | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -144,6 +145,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
     setMobileMenuOpen(false);
+    setMobileNotifOpen(false);
     setOpenDropdown(null);
 
     const pageTitle =
@@ -234,9 +236,9 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F2F8F5] pb-18 text-[#102530] lg:pb-0">
-      {/* ==================== TOP UTILITY BAR (Desktop & Tablet) ==================== */}
-      <div className="hidden bg-gradient-to-r from-[#123B67] via-[#123B67] to-[#087F5B] text-white md:block">
+    <div className="flex min-h-screen flex-col bg-[#F5F9F7] pb-24 text-[#102530] lg:bg-[#F2F8F5] lg:pb-0">
+      {/* ==================== TOP UTILITY BAR (Desktop Only) ==================== */}
+      <div className="hidden bg-gradient-to-r from-[#123B67] via-[#123B67] to-[#087F5B] text-white lg:block">
         <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-2 px-4 py-2 text-xs sm:px-6">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sky-50/95">
             {settings.address && (
@@ -277,37 +279,85 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
         </div>
       </div>
 
-      {/* ==================== STICKY MAIN NAVIGATION BAR ==================== */}
-      <header className="sticky top-0 z-40 border-b border-[#D7E6DF] bg-white/95 shadow-xs backdrop-blur-md">
-        <div
-          ref={navRef}
-          className="mx-auto flex h-14 max-w-[1280px] items-center justify-between gap-2 px-3 sm:h-[68px] sm:gap-3 sm:px-6"
-        >
-          {/* Logo & School Name Lockup */}
-          <Link to="/" className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-            {settings.logoUrl ? (
-              <img
-                src={settings.logoUrl}
-                alt={settings.schoolNameBn}
-                className="h-9 w-9 shrink-0 rounded-xl border-2 border-[#087F5B]/20 object-cover sm:h-11 sm:w-11"
-              />
-            ) : (
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#087F5B] to-[#123B67] text-white shadow-sm ring-2 ring-[#F4A62A]/40 sm:h-11 sm:w-11">
-                <GraduationCap className="h-5 w-5 text-[#F4A62A] sm:h-6 sm:w-6" />
-              </div>
-            )}
+      {/* ==================== COMPACT STICKY MOBILE APP HEADER (< lg) ==================== */}
+      <header className="sticky top-0 z-40 border-b border-[#D7E6DF] bg-white/95 shadow-[0_2px_14px_rgba(18,59,103,0.06)] backdrop-blur-md lg:hidden">
+        <div className="mx-auto flex h-14 max-w-[1280px] items-center justify-between gap-2 px-3">
+          {/* Logo + Institution Name */}
+          <Link to="/" className="flex min-w-0 flex-1 items-center gap-2.5">
+            <img
+              src={settings.logoUrl || '/school-logo.png'}
+              alt={settings.schoolNameBn}
+              className="h-9 w-9 shrink-0 rounded-full object-contain ring-1 ring-[#087F5B]/20"
+            />
             <div className="min-w-0">
-              <p className="truncate text-[14px] font-bold leading-tight text-[#123B67] sm:text-[17px]">
+              <p className="truncate text-[13.5px] font-extrabold leading-tight text-[#123B67]">
                 {settings.schoolNameBn}
               </p>
-              <p className="truncate text-[10px] font-semibold text-[#087F5B] sm:text-xs">
+              <p className="truncate text-[10px] font-semibold text-[#087F5B]">
+                {settings.schoolNameEn || 'Shah Islamic School And College'}
+              </p>
+            </div>
+          </Link>
+
+          {/* Compact Action Icons: Notification + Menu */}
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setMobileNotifOpen((v) => !v);
+              }}
+              aria-label="নোটিশ ও আপডেট দেখুন"
+              className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-[#DCE8E1] bg-[#F5F9F7] text-[#123B67] transition active:scale-95"
+            >
+              <Bell className="h-4.5 w-4.5" />
+              {urgentNoticeCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#F4A62A] px-1 text-[9px] font-extrabold text-[#123B67] ring-2 ring-white">
+                  {toBnDigits(urgentNoticeCount)}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setMobileNotifOpen(false);
+                setMobileMenuOpen(true);
+              }}
+              aria-label="নেভিগেশন মেনু খুলুন"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#087F5B] text-white shadow-xs transition active:scale-95"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ==================== STICKY DESKTOP NAVIGATION BAR (lg+) ==================== */}
+      <header className="sticky top-0 z-40 hidden border-b border-[#D7E6DF] bg-white/95 shadow-xs backdrop-blur-md lg:block">
+        <div
+          ref={navRef}
+          className="mx-auto flex h-[68px] max-w-[1280px] items-center justify-between gap-3 px-6"
+        >
+          {/* Logo & School Name Lockup */}
+          <Link to="/" className="flex min-w-0 items-center gap-3">
+            <img
+              src={settings.logoUrl || '/school-logo.png'}
+              alt={settings.schoolNameBn}
+              className="h-12 w-12 shrink-0 rounded-full object-contain drop-shadow-xs"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-[17px] font-bold leading-tight text-[#123B67]">
+                {settings.schoolNameBn}
+              </p>
+              <p className="truncate text-xs font-semibold text-[#087F5B]">
                 {settings.schoolNameEn || 'Shah Islamic School And College'}
               </p>
             </div>
           </Link>
 
           {/* Desktop Navigation with Modern Dropdowns */}
-          <nav className="hidden items-center gap-0.5 lg:flex" aria-label="প্রধান নেভিগেশন">
+          <nav className="flex items-center gap-0.5" aria-label="প্রধান নেভিগেশন">
             <NavLink
               to="/"
               end
@@ -467,8 +517,8 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
             ))}
           </nav>
 
-          {/* Right Action Controls (Desktop + Compact Mobile) */}
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {/* Right Action Controls (Desktop) */}
+          <div className="flex shrink-0 items-center gap-2">
             <div className="hidden xl:block">
               <PWAInstallButton variant="pill" />
             </div>
@@ -479,7 +529,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
             {currentUser ? (
               <Link
                 to="/dashboard"
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#087F5B] px-3 text-xs font-bold text-white shadow-xs transition hover:bg-[#06684A] sm:h-10 sm:px-4 sm:text-sm"
+                className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-[#087F5B] px-4 text-sm font-bold text-white shadow-xs transition hover:bg-[#06684A]"
               >
                 <LayoutDashboard className="h-4 w-4 shrink-0" />
                 <span>ড্যাশবোর্ড</span>
@@ -487,7 +537,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
             ) : (
               <Link
                 to="/login"
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-[#123B67] px-3 text-xs font-bold text-white shadow-xs transition hover:bg-[#0C2A4B] sm:h-10 sm:px-4 sm:text-sm"
+                className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-[#123B67] px-4 text-sm font-bold text-white shadow-xs transition hover:bg-[#0C2A4B]"
               >
                 <LogIn className="h-4 w-4 shrink-0 text-[#F4A62A]" />
                 <span>লগইন</span>
@@ -497,18 +547,18 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
         </div>
       </header>
 
-      {/* ==================== NOTICE TICKER BAR (Non-Sticky to Preserve Viewport) ==================== */}
+      {/* ==================== NOTICE TICKER BAR (Non-Sticky) ==================== */}
       <div className="border-b border-[#DCE8E1] bg-white">
-        <div className="mx-auto flex max-w-[1280px] flex-col gap-1.5 px-3 py-2 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 flex-1 items-center gap-2.5 overflow-hidden">
+        <div className="mx-auto flex max-w-[1280px] flex-col gap-1.5 px-3 py-1.5 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:py-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
             <Link
               to="/notices"
-              className="shrink-0 rounded-md bg-[#F4A62A] px-2.5 py-1 text-[11px] font-extrabold tracking-wide text-[#123B67] shadow-2xs transition hover:bg-[#e5981e]"
+              className="shrink-0 rounded-md bg-[#F4A62A] px-2 py-0.5 text-[10px] font-extrabold tracking-wide text-[#123B67] shadow-2xs transition hover:bg-[#e5981e] lg:px-2.5 lg:py-1 lg:text-[11px]"
             >
               আপডেট
             </Link>
             <div className="relative flex-1 overflow-hidden">
-              <div className="ticker-track flex items-center gap-10 whitespace-nowrap text-xs font-semibold text-[#1E3645] sm:text-sm">
+              <div className="ticker-track flex items-center gap-8 whitespace-nowrap text-[11.5px] font-semibold text-[#1E3645] lg:gap-10 lg:text-sm">
                 {[...tickerEntries, ...tickerEntries].map((item, idx) => (
                   <Link
                     key={`${idx}-${item.title.slice(0, 12)}`}
@@ -552,28 +602,64 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
       </div>
 
       {/* ==================== PAGE CONTENT OUTLET WITH SMOOTH TRANSITION ==================== */}
-      <main className="mx-auto w-full max-w-[1280px] flex-1 px-3 py-4 sm:px-6 sm:py-6">
+      <main className="mx-auto w-full max-w-[1280px] flex-1 px-3 py-3 sm:px-6 sm:py-5 lg:py-6">
         <div key={location.pathname} className="page-enter">
           <Outlet />
         </div>
       </main>
 
-      {/* ==================== FOOTER (Navy Blue + Emerald + Orange Accent) ==================== */}
-      <footer className="mt-10 border-t-4 border-[#F4A62A] bg-[#123B67] text-sky-50">
+      {/* ==================== COMPACT MOBILE FOOTER (< lg) ==================== */}
+      <footer className="mt-6 border-t-2 border-[#F4A62A] bg-[#123B67] px-4 py-6 text-sky-50 lg:hidden">
+        <div className="mx-auto max-w-lg space-y-4">
+          <div className="flex items-center gap-2.5">
+            <img
+              src={settings.logoUrl || '/school-logo.png'}
+              alt={settings.schoolNameBn}
+              className="h-10 w-10 shrink-0 rounded-full bg-white p-0.5 object-contain"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-extrabold text-white">{settings.schoolNameBn}</p>
+              <p className="truncate text-[10.5px] font-medium text-[#21A9D6]">
+                স্থাপিত: {toBnDigits(settings.establishedYear || '২০১৯')} খ্রি. · প্লে – {settings.highestClass || 'অষ্টম শ্রেণি'}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 text-[11px] font-semibold text-sky-100/90">
+            {[
+              { label: 'প্রতিষ্ঠান', to: '/about' },
+              { label: 'ভর্তি আবেদন', to: '/admission' },
+              { label: 'ফলাফল', to: '/results' },
+              { label: 'শিক্ষকমণ্ডলী', to: '/faculty' },
+              { label: 'গ্যালারি', to: '/gallery' },
+              { label: 'যোগাযোগ', to: '/contact' },
+            ].map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="rounded-lg bg-white/8 px-2.5 py-2 text-center transition active:bg-white/15"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="border-t border-white/10 pt-3 text-center text-[10.5px] text-sky-200/85">
+            © {toBnDigits(new Date().getFullYear())} {settings.schoolNameBn} · সর্বস্বত্ব সংরক্ষিত।
+          </div>
+        </div>
+      </footer>
+
+      {/* ==================== DESKTOP FOOTER (lg+) ==================== */}
+      <footer className="mt-10 hidden border-t-4 border-[#F4A62A] bg-[#123B67] text-sky-50 lg:block">
         <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-8 px-4 py-10 sm:px-6 md:grid-cols-3">
           <div>
             <div className="flex items-center gap-3">
-              {settings.logoUrl ? (
-                <img
-                  src={settings.logoUrl}
-                  alt={settings.schoolNameBn}
-                  className="h-11 w-11 shrink-0 rounded-xl border border-white/25 object-cover"
-                />
-              ) : (
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#087F5B] text-[#F4A62A] shadow-sm">
-                  <GraduationCap className="h-6 w-6" />
-                </div>
-              )}
+              <img
+                src={settings.logoUrl || '/school-logo.png'}
+                alt={settings.schoolNameBn}
+                className="h-12 w-12 shrink-0 rounded-full bg-white p-0.5 object-contain shadow-sm ring-2 ring-[#F4A62A]/50"
+              />
               <div>
                 <h3 className="text-base font-bold text-white">{settings.schoolNameBn}</h3>
                 {settings.schoolNameEn && (
@@ -683,135 +769,306 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
         </div>
       </footer>
 
-      {/* ==================== MOBILE APP FIXED BOTTOM NAVIGATION BAR ==================== */}
+      {/* ==================== PREMIUM FIXED MOBILE BOTTOM NAVIGATION (< lg) ==================== */}
       <nav
         aria-label="মোবাইল নিচের নেভিগেশন"
-        className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-[#D7E6DF] bg-white/95 shadow-[0_-4px_20px_rgba(18,59,103,0.08)] backdrop-blur-md lg:hidden"
+        className="pb-safe fixed inset-x-0 bottom-0 z-40 rounded-t-2xl border-t border-[#D7E6DF] bg-white/95 shadow-[0_-8px_28px_rgba(18,59,103,0.11)] backdrop-blur-md lg:hidden"
       >
-        <div className="mx-auto grid h-14 max-w-lg grid-cols-5 items-center px-1">
+        <div className="mx-auto grid h-[60px] max-w-lg grid-cols-5 items-center px-1.5">
+          {/* 1. হোম */}
           <NavLink
             to="/"
             end
             className={({ isActive }) =>
-              `flex h-full flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition ${
+              `relative flex h-full flex-col items-center justify-center gap-0.5 text-[10.5px] font-bold transition ${
                 isActive ? 'text-[#087F5B]' : 'text-[#526B78]'
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <Home className={`h-5 w-5 ${isActive ? 'stroke-[2.4]' : ''}`} />
-                <span>মূলপাতা</span>
-              </>
-            )}
-          </NavLink>
-
-          <NavLink
-            to="/notices"
-            className={({ isActive }) =>
-              `relative flex h-full flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition ${
-                isActive ? 'text-[#087F5B]' : 'text-[#526B78]'
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <div className="relative">
-                  <Bell className={`h-5 w-5 ${isActive ? 'stroke-[2.4]' : ''}`} />
-                  {urgentNoticeCount > 0 && (
-                    <span className="absolute -top-1 -right-1.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#F4A62A] px-1 text-[9px] font-extrabold text-[#123B67]">
-                      {toBnDigits(urgentNoticeCount)}
-                    </span>
-                  )}
-                </div>
-                <span>নোটিশ</span>
-              </>
-            )}
-          </NavLink>
-
-          <NavLink
-            to="/admission"
-            className={({ isActive }) =>
-              `flex h-full flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition ${
-                isActive ? 'text-[#087F5B]' : 'text-[#123B67]'
               }`
             }
           >
             {({ isActive }) => (
               <>
                 <span
-                  className={`flex h-8 w-11 items-center justify-center rounded-xl transition ${
-                    isActive
-                      ? 'bg-[#087F5B] text-white shadow-sm'
-                      : 'bg-[#F4A62A]/20 text-[#123B67]'
+                  className={`flex h-7 w-11 items-center justify-center rounded-xl transition ${
+                    isActive ? 'bg-[#087F5B]/12 text-[#087F5B]' : ''
                   }`}
                 >
-                  <UserPlus className="h-4 w-4" />
+                  <Home className={`h-4.5 w-4.5 ${isActive ? 'stroke-[2.4]' : ''}`} />
                 </span>
-                <span className="leading-none">ভর্তি</span>
+                <span className="leading-none">হোম</span>
               </>
             )}
           </NavLink>
 
+          {/* 2. নোটিশ */}
           <NavLink
-            to="/results"
+            to="/notices"
             className={({ isActive }) =>
-              `flex h-full flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition ${
+              `relative flex h-full flex-col items-center justify-center gap-0.5 text-[10.5px] font-bold transition ${
                 isActive ? 'text-[#087F5B]' : 'text-[#526B78]'
               }`
             }
           >
             {({ isActive }) => (
               <>
-                <Search className={`h-5 w-5 ${isActive ? 'stroke-[2.4]' : ''}`} />
-                <span>ফলাফল</span>
+                <span
+                  className={`relative flex h-7 w-11 items-center justify-center rounded-xl transition ${
+                    isActive ? 'bg-[#087F5B]/12 text-[#087F5B]' : ''
+                  }`}
+                >
+                  <Bell className={`h-4.5 w-4.5 ${isActive ? 'stroke-[2.4]' : ''}`} />
+                  {urgentNoticeCount > 0 && (
+                    <span className="absolute -top-0.5 right-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-[#F4A62A] px-1 text-[8.5px] font-extrabold text-[#123B67]">
+                      {toBnDigits(urgentNoticeCount)}
+                    </span>
+                  )}
+                </span>
+                <span className="leading-none">নোটিশ</span>
               </>
             )}
           </NavLink>
 
+          {/* 3. একাডেমিক */}
+          <NavLink
+            to="/academic"
+            className={({ isActive }) =>
+              `relative flex h-full flex-col items-center justify-center gap-0.5 text-[10.5px] font-bold transition ${
+                isActive || isAcademicActive ? 'text-[#087F5B]' : 'text-[#526B78]'
+              }`
+            }
+          >
+            {({ isActive }) => {
+              const active = isActive || isAcademicActive;
+              return (
+                <>
+                  <span
+                    className={`flex h-7 w-11 items-center justify-center rounded-xl transition ${
+                      active ? 'bg-[#087F5B] text-white shadow-xs' : 'bg-[#087F5B]/10 text-[#087F5B]'
+                    }`}
+                  >
+                    <BookOpen className={`h-4.5 w-4.5 ${active ? 'stroke-[2.4]' : ''}`} />
+                  </span>
+                  <span className="leading-none">একাডেমিক</span>
+                </>
+              );
+            }}
+          </NavLink>
+
+          {/* 4. ফলাফল */}
+          <NavLink
+            to="/results"
+            className={({ isActive }) =>
+              `relative flex h-full flex-col items-center justify-center gap-0.5 text-[10.5px] font-bold transition ${
+                isActive ? 'text-[#087F5B]' : 'text-[#526B78]'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span
+                  className={`flex h-7 w-11 items-center justify-center rounded-xl transition ${
+                    isActive ? 'bg-[#087F5B]/12 text-[#087F5B]' : ''
+                  }`}
+                >
+                  <Award className={`h-4.5 w-4.5 ${isActive ? 'stroke-[2.4]' : ''}`} />
+                </span>
+                <span className="leading-none">ফলাফল</span>
+              </>
+            )}
+          </NavLink>
+
+          {/* 5. মেনু */}
           <button
             type="button"
-            onClick={() => setMobileMenuOpen((v) => !v)}
+            onClick={() => {
+              setMobileNotifOpen(false);
+              setMobileMenuOpen((v) => !v);
+            }}
             aria-label="সম্পূর্ণ মেনু খুলুন"
-            className={`flex h-full flex-col items-center justify-center gap-0.5 text-[11px] font-bold transition ${
+            className={`flex h-full flex-col items-center justify-center gap-0.5 text-[10.5px] font-bold transition ${
               mobileMenuOpen ? 'text-[#087F5B]' : 'text-[#526B78]'
             }`}
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            <span>মেনু</span>
+            <span
+              className={`flex h-7 w-11 items-center justify-center rounded-xl transition ${
+                mobileMenuOpen ? 'bg-[#087F5B]/12 text-[#087F5B]' : ''
+              }`}
+            >
+              {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
+            </span>
+            <span className="leading-none">মেনু</span>
           </button>
         </div>
       </nav>
 
-      {/* ==================== MOBILE SLIDE-UP APP MENU SHEET ==================== */}
-      {mobileMenuOpen && (
+      {/* ==================== MOBILE NOTIFICATION BELL SHEET (< lg) ==================== */}
+      {mobileNotifOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-end bg-[#091C2B]/60 backdrop-blur-xs lg:hidden"
-          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 z-50 flex items-end bg-[#091C2B]/55 backdrop-blur-xs lg:hidden"
+          onClick={() => setMobileNotifOpen(false)}
         >
           <div
-            className="sheet-enter max-h-[84vh] w-full overflow-y-auto rounded-t-3xl bg-white shadow-2xl"
+            className="sheet-enter max-h-[78vh] w-full overflow-y-auto rounded-t-3xl bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E5EFE9] bg-white px-5 py-4">
-              <div>
-                <h2 className="text-base font-bold text-[#123B67]">{settings.schoolNameBn}</h2>
-                <p className="text-[11px] font-medium text-[#087F5B]">সকল বিভাগ ও ডিজিটাল সেবা</p>
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E5EFE9] bg-white px-4 py-3.5">
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#087F5B]/12 text-[#087F5B]">
+                  <Bell className="h-4 w-4" />
+                </span>
+                <div>
+                  <h2 className="text-sm font-extrabold text-[#123B67]">সর্বশেষ নোটিশ ও আপডেট</h2>
+                  <p className="text-[10.5px] font-semibold text-[#5A7380]">
+                    মোট {toBnDigits(notices.length)}টি প্রকাশিত বিজ্ঞপ্তি
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
-                onClick={() => setMobileMenuOpen(false)}
-                aria-label="মেনু বন্ধ করুন"
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F2F8F5] text-[#123B67]"
+                onClick={() => setMobileNotifOpen(false)}
+                aria-label="বন্ধ করুন"
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F5F9F7] text-[#123B67]"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="space-y-5 p-5 pb-8">
+            <div className="divide-y divide-[#EFF5F1] px-4 py-2">
+              {notices.slice(0, 6).map((n) => (
+                <Link
+                  key={n.id}
+                  to={`/notices/${n.id}`}
+                  onClick={() => setMobileNotifOpen(false)}
+                  className="block py-3 transition active:bg-[#F5F9F7]"
+                >
+                  <div className="flex items-center gap-1.5">
+                    {(n.category === 'Urgent' || n.isPinned) && (
+                      <span className="rounded bg-[#F4A62A] px-1.5 py-0.5 text-[9px] font-extrabold text-[#123B67]">
+                        জরুরি
+                      </span>
+                    )}
+                    <span className="text-[10px] font-semibold text-[#607A86] tabular-nums">
+                      {toBnDigits(n.publishedDate)}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs font-bold leading-snug text-[#123B67]">
+                    {n.titleBn || n.title}
+                  </p>
+                </Link>
+              ))}
+            </div>
+
+            <div className="border-t border-[#E5EFE9] p-4 pb-7">
+              <Link
+                to="/notices"
+                onClick={() => setMobileNotifOpen(false)}
+                className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-[#087F5B] text-xs font-extrabold text-white shadow-xs"
+              >
+                সকল নোটিশ দেখুন →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== SLIDE-IN MOBILE NAVIGATION DRAWER (< lg) ==================== */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-50 flex bg-[#091C2B]/60 backdrop-blur-xs lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <aside
+            aria-label="মোবাইল স্লাইড-ইন মেনু"
+            className="drawer-enter-left flex h-full w-[86vw] max-w-[320px] flex-col overflow-hidden bg-white shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Branded Drawer Header */}
+            <div className="bg-gradient-to-br from-[#123B67] to-[#087F5B] p-4 text-white">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <img
+                    src={settings.logoUrl || '/school-logo.png'}
+                    alt={settings.schoolNameBn}
+                    className="h-10 w-10 shrink-0 rounded-full bg-white p-0.5 object-contain"
+                  />
+                  <div className="min-w-0">
+                    <h2 className="truncate text-sm font-extrabold leading-tight">
+                      {settings.schoolNameBn}
+                    </h2>
+                    <p className="truncate text-[10px] font-semibold text-[#F4A62A]">
+                      {settings.schoolNameEn || 'Shah Islamic School And College'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  aria-label="মেনু বন্ধ করুন"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15 text-white"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Portal Login / Dashboard Quick Action */}
+              <div className="mt-3.5">
+                {currentUser ? (
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex min-h-[42px] w-full items-center justify-center gap-2 rounded-xl bg-[#F4A62A] px-3 text-xs font-extrabold text-[#123B67] shadow-xs"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>অ্যাডমিন / পোর্টাল ড্যাশবোর্ড</span>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex min-h-[42px] w-full items-center justify-center gap-2 rounded-xl bg-white px-3 text-xs font-extrabold text-[#123B67] shadow-xs"
+                  >
+                    <LogIn className="h-4 w-4 text-[#087F5B]" />
+                    <span>পোর্টাল লগইন (অ্যাডমিন / শিক্ষক / শিক্ষার্থী)</span>
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            {/* Scrollable Drawer Links */}
+            <div className="flex-1 space-y-5 overflow-y-auto p-4 pb-8">
               <div>
-                <p className="mb-2.5 text-xs font-bold text-[#123B67]">প্রতিষ্ঠান ও প্রশাসন</p>
-                <div className="grid grid-cols-2 gap-2.5">
+                <p className="mb-2 text-[11px] font-extrabold tracking-wide text-[#087F5B]">
+                  মূল সেবা
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { label: 'হোম', to: '/', icon: Home, accent: 'bg-[#087F5B]/10 text-[#087F5B]' },
+                    { label: 'অনলাইন ভর্তি', to: '/admission', icon: UserPlus, accent: 'bg-[#F4A62A]/15 text-[#9A5B00]' },
+                    { label: 'ফলাফল যাচাই', to: '/results', icon: Search, accent: 'bg-[#21A9D6]/15 text-[#0E7DA3]' },
+                    { label: 'নোটিশ বোর্ড', to: '/notices', icon: Bell, accent: 'bg-[#123B67]/10 text-[#123B67]' },
+                  ].map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex min-h-[46px] items-center gap-2 rounded-xl border border-[#DCE8E1] bg-[#F8FBF9] px-2.5 py-2 transition active:scale-[0.98]"
+                      >
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.accent}`}>
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <span className="truncate text-xs font-bold text-[#123B67]">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-[11px] font-extrabold tracking-wide text-[#123B67]">
+                  প্রতিষ্ঠান ও পরিচিতি
+                </p>
+                <div className="space-y-1">
                   {INSTITUTION_DROPDOWN.map((item) => {
                     const Icon = item.icon;
                     return (
@@ -819,12 +1076,15 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
                         key={item.to}
                         to={item.to}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl border border-[#DCE8E1] bg-[#F8FBF9] p-3 transition active:scale-98"
+                        className="flex min-h-[44px] items-center gap-3 rounded-xl px-2.5 py-2 transition active:bg-[#F5F9F7]"
                       >
-                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${item.accent}`}>
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.accent}`}>
                           <Icon className="h-4 w-4" />
                         </span>
-                        <span className="text-xs font-bold text-[#123B67]">{item.label}</span>
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-bold text-[#123B67]">{item.label}</p>
+                          <p className="truncate text-[10px] text-[#5A7380]">{item.desc}</p>
+                        </div>
                       </Link>
                     );
                   })}
@@ -832,8 +1092,10 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
               </div>
 
               <div>
-                <p className="mb-2.5 text-xs font-bold text-[#087F5B]">একাডেমিক ও পাঠ্যক্রম</p>
-                <div className="grid grid-cols-2 gap-2.5">
+                <p className="mb-2 text-[11px] font-extrabold tracking-wide text-[#087F5B]">
+                  একাডেমিক ও পাঠ্যক্রম
+                </p>
+                <div className="space-y-1">
                   {ACADEMIC_DROPDOWN.map((item) => {
                     const Icon = item.icon;
                     return (
@@ -841,12 +1103,15 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
                         key={item.to}
                         to={item.to}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl border border-[#DCE8E1] bg-[#F8FBF9] p-3 transition active:scale-98"
+                        className="flex min-h-[44px] items-center gap-3 rounded-xl px-2.5 py-2 transition active:bg-[#F5F9F7]"
                       >
-                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${item.accent}`}>
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.accent}`}>
                           <Icon className="h-4 w-4" />
                         </span>
-                        <span className="text-xs font-bold text-[#123B67]">{item.label}</span>
+                        <div className="min-w-0">
+                          <p className="truncate text-xs font-bold text-[#123B67]">{item.label}</p>
+                          <p className="truncate text-[10px] text-[#5A7380]">{item.desc}</p>
+                        </div>
                       </Link>
                     );
                   })}
@@ -854,10 +1119,12 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
               </div>
 
               <div>
-                <p className="mb-2.5 text-xs font-bold text-[#0E7DA3]">অন্যান্য সেবা</p>
+                <p className="mb-2 text-[11px] font-extrabold tracking-wide text-[#0E7DA3]">
+                  মিডিয়া ও যোগাযোগ
+                </p>
                 <div className="grid grid-cols-3 gap-2">
                   {[
-                    { label: 'ছবি গ্যালারি', to: '/gallery', icon: ImageIcon },
+                    { label: 'গ্যালারি', to: '/gallery', icon: ImageIcon },
                     { label: 'সংবাদ', to: '/news', icon: Bell },
                     { label: 'যোগাযোগ', to: '/contact', icon: MapPin },
                   ].map((item) => {
@@ -867,7 +1134,7 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
                         key={item.to}
                         to={item.to}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-[#DCE8E1] bg-white p-3 text-center text-xs font-bold text-[#123B67] shadow-2xs"
+                        className="flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-xl border border-[#DCE8E1] bg-white p-2 text-center text-[11px] font-bold text-[#123B67] shadow-2xs"
                       >
                         <Icon className="h-4 w-4 text-[#21A9D6]" />
                         <span>{item.label}</span>
@@ -878,20 +1145,20 @@ export const PublicLayout: React.FC<PublicLayoutProps> = ({ currentUser }) => {
               </div>
 
               {/* PWA Install + Direct Call */}
-              <div className="space-y-2.5 border-t border-[#E5EFE9] pt-4">
+              <div className="space-y-2 border-t border-[#E5EFE9] pt-4">
                 <PWAInstallButton variant="full" />
                 {settings.phone && (
                   <a
                     href={telHref}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#087F5B]/30 bg-[#F2F8F5] py-3 text-xs font-bold text-[#087F5B]"
+                    className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-[#087F5B]/30 bg-[#F5F9F7] px-3 text-xs font-extrabold text-[#087F5B]"
                   >
                     <Phone className="h-4 w-4" />
-                    <span>হেল্পলাইনে কল করুন: {settings.phone}</span>
+                    <span>কল করুন: {settings.phone}</span>
                   </a>
                 )}
               </div>
             </div>
-          </div>
+          </aside>
         </div>
       )}
 

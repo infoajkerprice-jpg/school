@@ -1,14 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Award,
+  CalendarClock,
+  ChevronDown,
+  ChevronUp,
   Download,
+  ExternalLink,
   FileBadge2,
   IdCard,
+  Image as ImageIcon,
   Layers,
   Loader2,
+  Palette,
+  Plus,
   Printer,
-  QrCode,
+  RotateCcw,
+  ShieldCheck,
   Trash2,
   X,
 } from 'lucide-react';
@@ -25,12 +33,38 @@ import {
 import { db, handleFirestoreError, makeSafeDocId, OperationType } from '../../lib/firebase';
 import { compareStudentsAcademic } from '../../lib/pdfStudentsRoster';
 import { downloadClassAdmitCardsPdf, exportAdmitCardElementToPdf } from '../../lib/admitCardPdf';
+import {
+  downloadClassIdCardsPdf,
+  downloadDualIdCardPng,
+  downloadSingleIdCardPdf,
+  downloadSingleIdCardSidePng,
+} from '../../lib/idCardPdf';
+import { getEnglishStudentSummary } from '../../lib/idCardEnglish';
 import { usePublicData } from '../../context/PublicDataContext';
 import { clampStr } from '../../lib/grading';
-import { CERTIFICATE_TYPE_BN, labelClass, labelSection, toBnDigits } from '../../i18n';
+import { CERTIFICATE_TYPE_BN, labelClass, toBnDigits } from '../../i18n';
 import { AdminModuleHeader } from '../AdminPagination';
-import { AdmitCardTemplate, type AdmitCardConfig } from '../AdmitCardTemplate';
+import {
+  AdmitCardBack,
+  AdmitCardFront,
+  type AdmitCardConfig,
+  type AdmitScheduleRow,
+} from '../AdmitCardTemplate';
+import { CertificateTemplate } from '../CertificateTemplate';
+import {
+  ID_CARD_THEMES,
+  StudentIdCardBack,
+  StudentIdCardFront,
+  type IdCardThemeId,
+  type StudentIdCardConfig,
+} from '../StudentIdCardTemplate';
 import { StudentPicker } from '../StudentPicker';
+import { ScannableQrCode } from '../ScannableQrCode';
+import {
+  buildStudentVerificationPath,
+  buildStudentVerificationUrl,
+  syncAllStudentVerifications,
+} from '../../lib/studentVerification';
 import { useUIFeedback } from '../ToastContext';
 import type { CertificateRecord, StudentRecord, UserAccount } from '../../types';
 
@@ -46,61 +80,21 @@ const PRESET_EXAMS = [
   'মডেল টেস্ট পরীক্ষা',
 ];
 
-/** Deterministic SVG QR-style verification matrix encoded from student ID & school code */
+/** Real ISO/IEC 18004 scannable QR code wrapper for ID cards & digital certificates */
 export const VerificationQrSvg: React.FC<{ value: string; size?: number }> = ({
   value,
-  size = 74,
-}) => {
-  const grid = 21;
-  const cells: boolean[][] = Array.from({ length: grid }, () => Array(grid).fill(false));
-
-  const drawFinder = (ox: number, oy: number) => {
-    for (let y = 0; y < 7; y++) {
-      for (let x = 0; x < 7; x++) {
-        const border = x === 0 || x === 6 || y === 0 || y === 6;
-        const inner = x >= 2 && x <= 4 && y >= 2 && y <= 4;
-        cells[oy + y][ox + x] = border || inner;
-      }
-    }
-  };
-  drawFinder(0, 0);
-  drawFinder(grid - 7, 0);
-  drawFinder(0, grid - 7);
-
-  let hash = 2166136261;
-  for (let i = 0; i < value.length; i++) {
-    hash ^= value.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-  for (let y = 0; y < grid; y++) {
-    for (let x = 0; x < grid; x++) {
-      const inFinder =
-        (x < 8 && y < 8) || (x >= grid - 8 && y < 8) || (x < 8 && y >= grid - 8);
-      if (!inFinder) {
-        hash ^= (x * 31 + y * 17 + value.length) & 0xff;
-        hash = Math.imul(hash, 16777619);
-        cells[y][x] = (hash & 1) === 1;
-      }
-    }
-  }
-
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox={`0 0 ${grid} ${grid}`}
-      role="img"
-      aria-label={`QR Code ${value}`}
-      style={{ backgroundColor: '#FFFFFF', padding: '3px', borderRadius: '4px' }}
-    >
-      {cells.map((row, y) =>
-        row.map((on, x) =>
-          on ? <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill="#123B67" /> : null
-        )
-      )}
-    </svg>
-  );
-};
+  size = 76,
+}) => (
+  <ScannableQrCode
+    value={value}
+    size={size}
+    level="M"
+    quietZoneModules={2}
+    fgColor="#000000"
+    bgColor="#FFFFFF"
+    style={{ borderRadius: '5px', border: '1px solid #CBE0D6' }}
+  />
+);
 
 export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
   const { settings, routines } = usePublicData();
@@ -130,9 +124,29 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
     examCenter: settings.schoolNameBn || 'শাহ ইসলামিক স্কুল এন্ড কলেজ',
     roomNo: '',
     includeSchedule: true,
+    includeBackPage: true,
+    customSchedule: [],
   });
+  const [showScheduleEditor, setShowScheduleEditor] = useState(false);
   const [downloadingAdmit, setDownloadingAdmit] = useState(false);
   const [bulkProgress, setBulkProgress] = useState<{ current: number; total: number } | null>(null);
+
+  // Double-sided English Student ID Card Studio configuration
+  const [idCardConfig, setIdCardConfig] = useState<StudentIdCardConfig>({
+    themeId: 'emerald-royal',
+    sessionLabel: String(new Date().getFullYear()),
+    validThru: `Dec ${new Date().getFullYear()}`,
+    authorityTitle: 'Principal',
+    studentNameOverride: '',
+    fatherNameOverride: '',
+    divisionOverride: '',
+    addressOverride: '',
+  });
+  const [showLanyardPreview, setShowLanyardPreview] = useState(true);
+  const [downloadingIdCard, setDownloadingIdCard] = useState(false);
+  const [bulkIdProgress, setBulkIdProgress] = useState<{ current: number; total: number } | null>(
+    null
+  );
 
   // Certificate form state
   const [certType, setCertType] = useState<CertificateRecord['certificateType']>('Testimonial');
@@ -141,7 +155,9 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
   const [saving, setSaving] = useState(false);
 
   const admitCardRef = useRef<HTMLDivElement>(null);
-  const idCardRef = useRef<HTMLDivElement>(null);
+  const admitBackRef = useRef<HTMLDivElement>(null);
+  const idCardFrontRef = useRef<HTMLDivElement>(null);
+  const idCardBackRef = useRef<HTMLDivElement>(null);
   const certRef = useRef<HTMLDivElement>(null);
 
   // Sync URL query params when navigated from StudentsModule
@@ -185,6 +201,16 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
     };
   }, []);
 
+  // Automatically keep public zero-PII `student_verifications` index synced in Firestore
+  const hasSyncedVerificationsRef = useRef(false);
+  useEffect(() => {
+    if (!isAdmin || students.length === 0 || hasSyncedVerificationsRef.current) return;
+    hasSyncedVerificationsRef.current = true;
+    void syncAllStudentVerifications(students).catch(() => {
+      hasSyncedVerificationsRef.current = false;
+    });
+  }, [isAdmin, students]);
+
   // Auto-select first student once loaded if none selected yet
   useEffect(() => {
     if (!selectedStudentId && students.length > 0) {
@@ -225,6 +251,16 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
       .sort(compareStudentsAcademic);
   }, [students, selectedClass]);
 
+  // Reset per-student manual English text overrides whenever another student is selected
+  useEffect(() => {
+    setIdCardConfig((prev) => ({
+      ...prev,
+      studentNameOverride: '',
+      fatherNameOverride: '',
+      divisionOverride: '',
+    }));
+  }, [selectedStudent?.id]);
+
   const switchTab = (next: 'admit' | 'idcard' | 'certificates') => {
     setTab(next);
     const nextParams = new URLSearchParams(searchParams);
@@ -232,17 +268,78 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
     setSearchParams(nextParams, { replace: true });
   };
 
-  const handleDownloadSingleAdmit = async () => {
+  const handleDownloadSingleAdmit = async (twoCopiesOnSheet = false) => {
     if (!admitCardRef.current || !selectedStudent || downloadingAdmit) return;
     setDownloadingAdmit(true);
     try {
-      await exportAdmitCardElementToPdf(admitCardRef.current, selectedStudent, admitConfig);
-      notify(`${selectedStudent.name}-এর প্রবেশপত্র পিডিএফ ডাউনলোড হয়েছে।`, 'success');
+      await exportAdmitCardElementToPdf(
+        admitCardRef.current,
+        selectedStudent,
+        admitConfig,
+        admitBackRef.current,
+        twoCopiesOnSheet
+      );
+      notify(
+        `${selectedStudent.name}-এর প্রবেশপত্র ${
+          admitConfig.includeBackPage !== false ? '(সামনে + পিছনে সময়সূচিসহ A4 ডুপ্লেক্স)' : ''
+        } পিডিএফ ডাউনলোড হয়েছে।`,
+        'success'
+      );
     } catch {
       notify('প্রবেশপত্র পিডিএফ তৈরি করতে সমস্যা হয়েছে।', 'error');
     } finally {
       setDownloadingAdmit(false);
     }
+  };
+
+  const handleAddScheduleRow = () => {
+    const nextRow: AdmitScheduleRow = {
+      id: `row_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      date: '',
+      day: '',
+      time: 'সকাল ১০:০০ - ১২:০০',
+      subject: '',
+    };
+    setAdmitConfig((prev) => ({
+      ...prev,
+      customSchedule: [...(prev.customSchedule || []), nextRow],
+    }));
+  };
+
+  const handleLoadSampleSchedule = () => {
+    const sample: AdmitScheduleRow[] = [
+      { id: 's1', date: '১৫/০৬/২০২৬', day: 'সোমবার', time: 'সকাল ১০:০০ - ১২:০০', subject: 'বাংলা' },
+      { id: 's2', date: '১৭/০৬/২০২৬', day: 'বুধবার', time: 'সকাল ১০:০০ - ১২:০০', subject: 'ইংরেজি' },
+      { id: 's3', date: '১৯/০৬/২০২৬', day: 'শুক্রবার', time: 'সকাল ১০:০০ - ১২:০০', subject: 'গণিত' },
+      { id: 's4', date: '২১/০৬/২০২৬', day: 'রবিবার', time: 'সকাল ১০:০০ - ১২:০০', subject: 'ইসলাম ও নৈতিক শিক্ষা' },
+      { id: 's5', date: '২৩/০৬/২০২৬', day: 'মঙ্গলবার', time: 'সকাল ১০:০০ - ১২:০০', subject: 'আরবি / সাধারণ জ্ঞান' },
+    ];
+    setAdmitConfig((prev) => ({
+      ...prev,
+      includeSchedule: true,
+      includeBackPage: true,
+      customSchedule: sample,
+    }));
+  };
+
+  const handleUpdateScheduleRow = (
+    rowId: string,
+    field: keyof Omit<AdmitScheduleRow, 'id'>,
+    value: string
+  ) => {
+    setAdmitConfig((prev) => ({
+      ...prev,
+      customSchedule: (prev.customSchedule || []).map((r) =>
+        r.id === rowId ? { ...r, [field]: value } : r
+      ),
+    }));
+  };
+
+  const handleRemoveScheduleRow = (rowId: string) => {
+    setAdmitConfig((prev) => ({
+      ...prev,
+      customSchedule: (prev.customSchedule || []).filter((r) => r.id !== rowId),
+    }));
   };
 
   const handleDownloadClassAdmits = async () => {
@@ -268,17 +365,72 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
     }
   };
 
-  const handleDownloadIdCard = async () => {
-    if (!idCardRef.current || !selectedStudent) return;
+  const handleDownloadIdCardPdf = async () => {
+    if (!idCardFrontRef.current || !idCardBackRef.current || !selectedStudent || downloadingIdCard) {
+      return;
+    }
+    setDownloadingIdCard(true);
     try {
-      const dataUrl = await toPng(idCardRef.current, { pixelRatio: 3, backgroundColor: '#FFFFFF' });
-      const link = document.createElement('a');
-      link.download = `ID_Card_${selectedStudent.studentIdCode}.png`;
-      link.href = dataUrl;
-      link.click();
-      notify(`${selectedStudent.name}-এর ডিজিটাল আইডি কার্ড ডাউনলোড হয়েছে।`, 'success');
+      await downloadSingleIdCardPdf(idCardFrontRef.current, idCardBackRef.current, selectedStudent);
+      notify(`${selectedStudent.name}-এর Front + Back CR80 আইডি কার্ড PDF ডাউনলোড হয়েছে।`, 'success');
     } catch {
-      notify('আইডি কার্ড ডাউনলোড করতে সমস্যা হয়েছে।', 'error');
+      notify('আইডি কার্ড PDF তৈরি করতে সমস্যা হয়েছে।', 'error');
+    } finally {
+      setDownloadingIdCard(false);
+    }
+  };
+
+  const handleDownloadIdCardDualPng = async () => {
+    if (!idCardFrontRef.current || !idCardBackRef.current || !selectedStudent || downloadingIdCard) {
+      return;
+    }
+    setDownloadingIdCard(true);
+    try {
+      await downloadDualIdCardPng(idCardFrontRef.current, idCardBackRef.current, selectedStudent);
+      notify(`${selectedStudent.name}-এর Front + Back HD PNG ডাউনলোড হয়েছে।`, 'success');
+    } catch {
+      notify('আইডি কার্ড PNG ডাউনলোড করতে সমস্যা হয়েছে।', 'error');
+    } finally {
+      setDownloadingIdCard(false);
+    }
+  };
+
+  const handleDownloadIdCardSide = async (side: 'Front' | 'Back') => {
+    const targetEl = side === 'Front' ? idCardFrontRef.current : idCardBackRef.current;
+    if (!targetEl || !selectedStudent || downloadingIdCard) return;
+    setDownloadingIdCard(true);
+    try {
+      await downloadSingleIdCardSidePng(targetEl, selectedStudent, side);
+      notify(
+        `${selectedStudent.name}-এর আইডি কার্ড (${side === 'Front' ? 'সামনের দিক' : 'পিছনের দিক'}) PNG ডাউনলোড হয়েছে।`,
+        'success'
+      );
+    } catch {
+      notify('আইডি কার্ড ডাউনলোড করতে সমস্যা হয়েছে।', 'error');
+    } finally {
+      setDownloadingIdCard(false);
+    }
+  };
+
+  const handleDownloadClassIdCards = async () => {
+    if (selectedClass === 'ALL' || classStudentsForBulk.length === 0 || bulkIdProgress) return;
+    setBulkIdProgress({ current: 1, total: classStudentsForBulk.length });
+    try {
+      await downloadClassIdCardsPdf(
+        classStudentsForBulk,
+        settings,
+        idCardConfig,
+        selectedClass,
+        (current, total) => setBulkIdProgress({ current, total })
+      );
+      notify(
+        `${labelClass(selectedClass)}-এর ${toBnDigits(classStudentsForBulk.length)} জন শিক্ষার্থীর ডাবল-সাইডেড আইডি কার্ড PDF ডাউনলোড হয়েছে।`,
+        'success'
+      );
+    } catch {
+      notify('পুরো শ্রেণির আইডি কার্ড PDF তৈরি করতে সমস্যা হয়েছে।', 'error');
+    } finally {
+      setBulkIdProgress(null);
     }
   };
 
@@ -336,16 +488,72 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
     }
   };
 
+  const previewCert: CertificateRecord | null = useMemo(() => {
+    if (activeCert) return activeCert;
+    if (!selectedStudent) return null;
+    return {
+      id: 'draft-preview',
+      certificateNo: `${certType}-${new Date().getFullYear()}-${String(selectedStudent.rollNumber || '01').padStart(3, '0')}`,
+      certificateType: certType,
+      studentId: selectedStudent.id,
+      studentName: selectedStudent.name,
+      fatherName: selectedStudent.fatherName || selectedStudent.guardianName || '',
+      motherName: selectedStudent.motherName || '',
+      className: selectedStudent.className,
+      rollNumber: selectedStudent.rollNumber,
+      issueDate: new Date().toISOString().slice(0, 10),
+      reasonOrRemarks: remarks.trim(),
+      issuedByUid: currentUser.uid,
+    };
+  }, [activeCert, selectedStudent, certType, remarks, currentUser.uid]);
+
+  const previewCertStudent = useMemo(() => {
+    if (!previewCert) return null;
+    return students.find((s) => s.id === previewCert.studentId) || selectedStudent || null;
+  }, [previewCert, students, selectedStudent]);
+
   const handleDownloadCertificatePdf = async () => {
-    if (!certRef.current || !activeCert) return;
+    if (!certRef.current || !previewCert) return;
     try {
-      const dataUrl = await toPng(certRef.current, { pixelRatio: 2.5, backgroundColor: '#FFFFFF' });
-      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      if (typeof document !== 'undefined' && 'fonts' in document) {
+        await document.fonts.ready;
+      }
+      const dataUrl = await toPng(certRef.current, {
+        pixelRatio: 3,
+        backgroundColor: '#C6A45F',
+        cacheBust: true,
+        width: certRef.current.offsetWidth || 960,
+        height: certRef.current.offsetHeight || 678,
+      });
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
       pdf.addImage(dataUrl, 'PNG', 0, 0, 297, 210, undefined, 'FAST');
-      pdf.save(`${activeCert.certificateNo}.pdf`);
-      notify('সনদপত্র পিডিএফ ডাউনলোড হয়েছে।', 'success');
+      pdf.save(`${previewCert.certificateNo}.pdf`);
+      notify('সনদপত্র পিডিএফ ডাউনলোড হয়েছে।', 'success');
     } catch {
-      notify('পিডিএফ তৈরি করতে সমস্যা হয়েছে।', 'error');
+      notify('পিডিএফ তৈরি করতে সমস্যা হয়েছে।', 'error');
+    }
+  };
+
+  const handleDownloadCertificatePng = async () => {
+    if (!certRef.current || !previewCert) return;
+    try {
+      if (typeof document !== 'undefined' && 'fonts' in document) {
+        await document.fonts.ready;
+      }
+      const dataUrl = await toPng(certRef.current, {
+        pixelRatio: 3,
+        backgroundColor: '#C6A45F',
+        cacheBust: true,
+        width: certRef.current.offsetWidth || 960,
+        height: certRef.current.offsetHeight || 678,
+      });
+      const link = document.createElement('a');
+      link.download = `${previewCert.certificateNo}.png`;
+      link.href = dataUrl;
+      link.click();
+      notify('সনদপত্র HD PNG ডাউনলোড হয়েছে।', 'success');
+    } catch {
+      notify('সনদপত্র PNG তৈরি করতে সমস্যা হয়েছে।', 'error');
     }
   };
 
@@ -495,23 +703,39 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
 
             {/* Action Bar */}
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[#EAF2ED] pt-4 dark:border-slate-800">
-              <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-[#263B35] dark:text-slate-300">
-                <input
-                  type="checkbox"
-                  checked={Boolean(admitConfig.includeSchedule)}
-                  onChange={(e) =>
-                    setAdmitConfig({ ...admitConfig, includeSchedule: e.target.checked })
-                  }
-                  className="h-4 w-4 rounded border-[#CFE0D6] text-[#087F5B] focus:ring-[#087F5B]"
-                />
-                পরীক্ষার রুটিন থাকলে প্রবেশপত্রে যুক্ত করুন
-              </label>
+              <div className="flex flex-wrap items-center gap-4">
+                <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-bold text-[#123B67] dark:text-slate-200">
+                  <input
+                    type="checkbox"
+                    checked={admitConfig.includeBackPage !== false}
+                    onChange={(e) =>
+                      setAdmitConfig({ ...admitConfig, includeBackPage: e.target.checked })
+                    }
+                    className="h-4 w-4 rounded border-[#CFE0D6] text-[#087F5B] focus:ring-[#087F5B]"
+                  />
+                  পিছনের পৃষ্ঠা যুক্ত করুন (পরীক্ষার সময়সূচি ও বিধি-নিষেধ)
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => setShowScheduleEditor((v) => !v)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#CFE0D6] bg-[#F2F8F5] px-3 py-1.5 text-xs font-bold text-[#087F5B] transition hover:bg-[#E4F3EC] dark:border-slate-700 dark:bg-slate-800 dark:text-emerald-300"
+                >
+                  <CalendarClock className="h-3.5 w-3.5" />
+                  পরীক্ষার সময়সূচি সাজান ({toBnDigits((admitConfig.customSchedule || []).length)})
+                  {showScheduleEditor ? (
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  ) : (
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              </div>
 
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   disabled={!selectedStudent || downloadingAdmit || Boolean(bulkProgress)}
-                  onClick={() => void handleDownloadSingleAdmit()}
+                  onClick={() => void handleDownloadSingleAdmit(false)}
                   className="inline-flex items-center gap-1.5 rounded-xl bg-[#087F5B] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#06684A] disabled:opacity-50"
                 >
                   {downloadingAdmit ? (
@@ -519,7 +743,17 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
                   ) : (
                     <Download className="h-3.5 w-3.5" />
                   )}
-                  {downloadingAdmit ? 'পিডিএফ তৈরি হচ্ছে...' : 'প্রবেশপত্র ডাউনলোড (PDF)'}
+                  {downloadingAdmit ? 'পিডিএফ তৈরি হচ্ছে...' : 'প্রবেশপত্র PDF (উভয় পিঠ)'}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={!selectedStudent || downloadingAdmit || Boolean(bulkProgress)}
+                  onClick={() => void handleDownloadSingleAdmit(true)}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-[#087F5B] bg-white px-3.5 py-2.5 text-xs font-bold text-[#087F5B] transition hover:bg-[#F2F8F5] disabled:opacity-50 dark:bg-slate-800 dark:text-emerald-300"
+                >
+                  <Layers className="h-3.5 w-3.5" />
+                  ১ A4-এ ২ কপি
                 </button>
 
                 {selectedClass !== 'ALL' && classStudentsForBulk.length > 0 && (
@@ -536,7 +770,7 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
                     )}
                     {bulkProgress
                       ? `তৈরি হচ্ছে ${toBnDigits(bulkProgress.current)}/${toBnDigits(bulkProgress.total)}...`
-                      : `পুরো ${labelClass(selectedClass)} একসাথে PDF (${toBnDigits(classStudentsForBulk.length)} জন)`}
+                      : `পুরো ${labelClass(selectedClass)} A4 ডুপ্লেক্স PDF (${toBnDigits(classStudentsForBulk.length)} জন)`}
                   </button>
                 )}
 
@@ -548,34 +782,161 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
                   <Printer className="h-3.5 w-3.5" />
                   প্রিন্ট
                 </button>
+
+                {selectedStudent && (
+                  <Link
+                    to={buildStudentVerificationPath(selectedStudent.studentIdCode, {
+                      examName: admitConfig.examName,
+                      academicYear: admitConfig.academicYear,
+                    })}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#21A9D6]/50 bg-[#EAF7FC] px-3.5 py-2.5 text-xs font-bold text-[#0B5C7A] transition hover:bg-[#21A9D6] hover:text-white dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300"
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    QR যাচাই টেস্ট করুন
+                    <ExternalLink className="h-3 w-3" />
+                  </Link>
+                )}
               </div>
             </div>
+
+            {/* Inline Exam Schedule Editor for Back Side */}
+            {showScheduleEditor && (
+              <div className="mt-4 space-y-3 rounded-xl border border-[#D4E6DC] bg-[#F7FBF9] p-4 dark:border-slate-800 dark:bg-slate-800/50">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-xs font-extrabold text-[#123B67] dark:text-white">
+                      পিছনের পৃষ্ঠার পরীক্ষার সময়সূচি (ঐচ্ছিক কাস্টম তালিকা)
+                    </p>
+                    <p className="text-[11px] text-[#526B78] dark:text-slate-400">
+                      এখানে সময়সূচি দিলে প্রবেশপত্রের পিছনে ছাপা হবে; খালি রাখলে ওই শ্রেণির সংরক্ষিত পরীক্ষার রুটিন (বা ফাঁকা ছক) দেখাবে।
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleLoadSampleSchedule}
+                      className="rounded-lg border border-[#F4A62A]/60 bg-[#FFF8EB] px-2.5 py-1 text-[11px] font-bold text-[#9A5B04] transition hover:bg-[#FDEBC8] dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300"
+                    >
+                      নমুনা রুটিন দিন
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleAddScheduleRow}
+                      className="inline-flex items-center gap-1 rounded-lg bg-[#087F5B] px-2.5 py-1 text-[11px] font-bold text-white hover:bg-[#06684A]"
+                    >
+                      <Plus className="h-3 w-3" />
+                      বিষয় যোগ করুন
+                    </button>
+                  </div>
+                </div>
+
+                {(admitConfig.customSchedule || []).length > 0 && (
+                  <div className="space-y-2">
+                    {(admitConfig.customSchedule || []).map((row) => (
+                      <div key={row.id} className="grid grid-cols-1 gap-2 sm:grid-cols-12">
+                        <input
+                          value={row.date}
+                          onChange={(e) => handleUpdateScheduleRow(row.id, 'date', e.target.value)}
+                          placeholder="তারিখ (যেমন: ১৫/০৬/২০২৬)"
+                          className={`${inputClass} sm:col-span-3`}
+                        />
+                        <input
+                          value={row.day}
+                          onChange={(e) => handleUpdateScheduleRow(row.id, 'day', e.target.value)}
+                          placeholder="বার (যেমন: সোমবার)"
+                          className={`${inputClass} sm:col-span-2`}
+                        />
+                        <input
+                          value={row.time}
+                          onChange={(e) => handleUpdateScheduleRow(row.id, 'time', e.target.value)}
+                          placeholder="সময় (সকাল ১০:০০ - ১২:০০)"
+                          className={`${inputClass} sm:col-span-3`}
+                        />
+                        <input
+                          value={row.subject}
+                          onChange={(e) => handleUpdateScheduleRow(row.id, 'subject', e.target.value)}
+                          placeholder="বিষয়ের নাম"
+                          className={`${inputClass} sm:col-span-3`}
+                        />
+                        <button
+                          type="button"
+                          aria-label="সারি মুছুন"
+                          onClick={() => handleRemoveScheduleRow(row.id)}
+                          className="inline-flex items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-2 text-rose-600 hover:bg-rose-600 hover:text-white sm:col-span-1 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Live Kalpurush Admit Card Preview */}
-          <div className="rounded-2xl border border-[#DCE8E1] bg-[#EDF3EF] p-5 dark:border-slate-800 dark:bg-slate-950/70">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-[#526B78] dark:text-slate-400">
-              <span className="font-bold text-[#123B67] dark:text-slate-200">
-                লাইভ প্রবেশপত্র প্রিভিউ (কালপুরুষ ফন্ট)
+          {/* Duplex A4 Printing Guide Banner */}
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#C6E2EA] bg-[#EAF6F9] px-4 py-2.5 text-xs text-[#0B4D76] dark:border-sky-900/60 dark:bg-sky-950/30 dark:text-sky-200">
+            <span>
+              <strong>A4 ডুপ্লেক্স প্রিন্ট গাইড:</strong> প্রতিটি A4 শিটে ২টি প্রবেশপত্র (উপরে ও নিচে কাটার দাগসহ) — পৃষ্ঠা ১-এ <strong>সামনের মূল প্রবেশপত্র</strong> এবং পৃষ্ঠা ২-এ <strong>পিছনের পরীক্ষার সময়সূচি ও বিধি-নিষেধ</strong> সমান মাপে বসানো আছে। প্রিন্টারে <strong>Double-Sided (Flip on Long Edge)</strong> দিয়ে প্রিন্ট করে মাঝখান দিয়ে কাটুন।
+            </span>
+            {selectedClass === 'ALL' && (
+              <span className="font-bold text-[#087F5B] dark:text-emerald-300">
+                পুরো শ্রেণির PDF পেতে উপরে শ্রেণি নির্বাচন করুন ↑
               </span>
-              {selectedClass === 'ALL' && (
-                <span>
-                  টিপস: পুরো শ্রেণির প্রবেশপত্র একসাথে PDF পেতে উপরে নির্দিষ্ট শ্রেণি নির্বাচন করুন।
-                </span>
-              )}
-            </div>
+            )}
+          </div>
 
+          {/* Live Kalpurush Front & Back Admit Card Preview */}
+          <div className="space-y-5 rounded-2xl border border-[#DCE8E1] bg-[#E8F1F4] p-5 dark:border-slate-800 dark:bg-slate-950/70">
             {selectedStudent ? (
-              <div className="overflow-x-auto pb-2">
-                <div className="mx-auto w-fit shadow-lg">
-                  <AdmitCardTemplate
-                    ref={admitCardRef}
-                    student={selectedStudent}
-                    settings={settings}
-                    config={admitConfig}
-                    examRoutines={routines}
-                  />
+              <div className="space-y-6">
+                {/* Front Side Preview */}
+                <div>
+                  <div className="mb-2 flex items-center justify-between text-xs">
+                    <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#066680] px-2.5 py-1 font-bold text-white">
+                      সামনের দিক (Front Side — মূল প্রবেশপত্র)
+                    </span>
+                    <span className="font-semibold text-[#4B6672] dark:text-slate-400">
+                      A4 পেজে ২টি করে বসবে · কালপুরুষ ফন্ট
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto pb-2">
+                    <div className="mx-auto w-fit shadow-lg">
+                      <AdmitCardFront
+                        ref={admitCardRef}
+                        student={selectedStudent}
+                        settings={settings}
+                        config={admitConfig}
+                        examRoutines={routines}
+                      />
+                    </div>
+                  </div>
                 </div>
+
+                {/* Back Side Preview */}
+                {admitConfig.includeBackPage !== false && (
+                  <div>
+                    <div className="mb-2 flex items-center justify-between text-xs">
+                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#DF8914] px-2.5 py-1 font-bold text-white">
+                        পিছনের দিক (Back Side — পরীক্ষার সময়সূচি ও পালনীয় বিধি-নিষেধ)
+                      </span>
+                      <span className="font-semibold text-[#4B6672] dark:text-slate-400">
+                        ডুপ্লেক্স প্রিন্টে সামনের কার্ডের ঠিক পিছনে বসবে
+                      </span>
+                    </div>
+                    <div className="overflow-x-auto pb-2">
+                      <div className="mx-auto w-fit shadow-lg">
+                        <AdmitCardBack
+                          ref={admitBackRef}
+                          student={selectedStudent}
+                          settings={settings}
+                          config={admitConfig}
+                          examRoutines={routines}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <p className="py-12 text-center text-xs text-[#587064] dark:text-slate-400">
@@ -586,205 +947,396 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
         </div>
       )}
 
-      {/* ==================== TAB 2: DIGITAL ID CARD WITH QR VERIFICATION ==================== */}
+      {/* ==================== TAB 2: DOUBLE-SIDED COLORFUL ENGLISH STUDENT ID CARD ==================== */}
       {tab === 'idcard' && (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          <div className="space-y-4 rounded-2xl border border-[#DCE8E1] bg-white p-5 shadow-2xs lg:col-span-5 dark:border-slate-800 dark:bg-slate-900">
-            <StudentPicker
-              students={students}
-              value={selectedStudent?.id || ''}
-              onChange={setSelectedStudentId}
-              classFilter={selectedClass}
-              onClassFilterChange={setSelectedClass}
-              label="শ্রেণি ও শিক্ষার্থী নির্বাচন করুন"
-            />
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+            {/* LEFT CONTROL STUDIO */}
+            <div className="space-y-4 rounded-2xl border border-[#DCE8E1] bg-white p-5 shadow-2xs xl:col-span-4 dark:border-slate-800 dark:bg-slate-900">
+              <StudentPicker
+                students={students}
+                value={selectedStudent?.id || ''}
+                onChange={setSelectedStudentId}
+                classFilter={selectedClass}
+                onClassFilterChange={setSelectedClass}
+                label="শ্রেণি ও শিক্ষার্থী নির্বাচন করুন"
+              />
 
-            {selectedStudent && (
-              <div className="space-y-2 rounded-xl border border-[#E2EDE7] bg-[#F2F8F5] p-3.5 text-xs text-[#263B35] dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300">
-                <p>
-                  <strong className="text-[#123B67] dark:text-white">আইডি কোড:</strong>{' '}
-                  {selectedStudent.studentIdCode}
-                </p>
-                <p className="break-all">
-                  <strong className="text-[#123B67] dark:text-white">QR যাচাইকরণ তথ্য:</strong>{' '}
-                  {settings.websiteUrl || 'https://shahislamicschool.com'}/verify?id=
-                  {selectedStudent.studentIdCode}
-                </p>
-                <p>
-                  <strong className="text-[#123B67] dark:text-white">অভিভাবক:</strong>{' '}
-                  {selectedStudent.guardianName} ({selectedStudent.guardianPhone})
-                </p>
-              </div>
-            )}
-
-            <div className="flex flex-wrap gap-2 pt-2">
-              <button
-                type="button"
-                disabled={!selectedStudent}
-                onClick={() => void handleDownloadIdCard()}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-[#087F5B] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#06684A] disabled:opacity-50"
-              >
-                <Download className="h-3.5 w-3.5" />
-                আইডি কার্ড ডাউনলোড (PNG)
-              </button>
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-[#CFE0D6] bg-white px-4 py-2.5 text-xs font-bold text-[#123B67] transition hover:bg-[#F2F8F5] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-              >
-                <Printer className="h-3.5 w-3.5" />
-                প্রিন্ট
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center rounded-2xl border border-[#DCE8E1] bg-[#EDF3EF] p-6 lg:col-span-7 dark:border-slate-800 dark:bg-slate-950/70">
-            {selectedStudent ? (
-              <div
-                ref={idCardRef}
-                style={{
-                  width: '320px',
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: '14px',
-                  overflow: 'hidden',
-                  border: '2px solid #087F5B',
-                  fontFamily: "'Kalpurush', 'Hind Siliguri', sans-serif",
-                  boxShadow: '0 10px 25px rgba(8, 127, 91, 0.16)',
-                }}
-              >
-                <div
-                  style={{
-                    background: 'linear-gradient(135deg, #123B67 0%, #087F5B 100%)',
-                    color: '#FFFFFF',
-                    padding: '14px 16px',
-                    textAlign: 'center',
-                  }}
-                >
-                  <p style={{ margin: 0, fontSize: '16px', fontWeight: 700 }}>{settings.schoolNameBn}</p>
-                  <p style={{ margin: '2px 0 0', fontSize: '10px', opacity: 0.9 }}>
-                    {settings.schoolNameEn || 'Shah Islamic School And College'}
-                  </p>
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      marginTop: '6px',
-                      backgroundColor: '#F4A62A',
-                      color: '#123B67',
-                      padding: '2px 12px',
-                      borderRadius: '4px',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                    }}
-                  >
-                    শিক্ষার্থী পরিচয়পত্র (STUDENT ID)
+              {/* Colorful Theme Selector */}
+              <div className="space-y-2 border-t border-[#EAF2ED] pt-3.5 dark:border-slate-800">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-[#123B67] dark:text-slate-200">
+                    <Palette className="h-3.5 w-3.5 text-[#087F5B]" />
+                    কালার থিম নির্বাচন করুন
+                  </span>
+                  <span className="text-[11px] font-semibold text-[#587064] dark:text-slate-400">
+                    {ID_CARD_THEMES[idCardConfig.themeId].labelEn}
                   </span>
                 </div>
-
-                <div style={{ padding: '16px', textAlign: 'center' }}>
-                  <div
-                    style={{
-                      width: '82px',
-                      height: '82px',
-                      margin: '0 auto 10px',
-                      borderRadius: '999px',
-                      border: '3px solid #087F5B',
-                      overflow: 'hidden',
-                      backgroundColor: '#F2F8F5',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '26px',
-                      fontWeight: 700,
-                      color: '#087F5B',
-                    }}
-                  >
-                    {selectedStudent.photoUrl ? (
-                      <img
-                        src={selectedStudent.photoUrl}
-                        alt={selectedStudent.name}
-                        referrerPolicy="no-referrer"
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    ) : (
-                      selectedStudent.name.slice(0, 1)
-                    )}
-                  </div>
-
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#123B67' }}>
-                    {selectedStudent.name}
-                  </h3>
-                  <p style={{ margin: '2px 0 12px', fontSize: '12px', fontWeight: 700, color: '#087F5B' }}>
-                    আইডি: {selectedStudent.studentIdCode}
-                  </p>
-
-                  <div
-                    style={{
-                      textAlign: 'left',
-                      fontSize: '12.5px',
-                      lineHeight: 1.7,
-                      color: '#263B35',
-                      backgroundColor: '#F2F8F5',
-                      padding: '10px 12px',
-                      borderRadius: '8px',
-                      border: '1px solid #D5E8DC',
-                    }}
-                  >
-                    <div>
-                      <strong>শ্রেণি:</strong> {labelClass(selectedStudent.className)} (
-                      {labelSection(selectedStudent.section)})
-                    </div>
-                    <div>
-                      <strong>রোল নম্বর:</strong> {toBnDigits(selectedStudent.rollNumber)}
-                    </div>
-                    <div>
-                      <strong>রক্তের গ্রুপ:</strong> {selectedStudent.bloodGroup || '—'}
-                    </div>
-                    <div>
-                      <strong>অভিভাবক:</strong> {selectedStudent.guardianName}
-                    </div>
-                    <div>
-                      <strong>জরুরি মোবাইল:</strong> {selectedStudent.guardianPhone}
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      marginTop: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      paddingTop: '8px',
-                      borderTop: '1px dashed #CBE0D3',
-                    }}
-                  >
-                    <div style={{ textAlign: 'left', fontSize: '10px', color: '#4B675B' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 700, color: '#087F5B' }}>
-                        <QrCode className="h-3.5 w-3.5" /> QR যাচাইকৃত
-                      </div>
-                      <div style={{ marginTop: '4px' }}>
-                        শিক্ষাবর্ষ: {toBnDigits(selectedStudent.admissionYear || '2026')}
-                      </div>
-                      <div
-                        style={{
-                          marginTop: '14px',
-                          borderTop: '1px solid #087F5B',
-                          paddingTop: '2px',
-                          fontWeight: 700,
-                        }}
+                <div className="grid grid-cols-2 gap-2">
+                  {(Object.keys(ID_CARD_THEMES) as IdCardThemeId[]).map((tid) => {
+                    const palette = ID_CARD_THEMES[tid];
+                    const active = idCardConfig.themeId === tid;
+                    return (
+                      <button
+                        key={tid}
+                        type="button"
+                        onClick={() => setIdCardConfig((prev) => ({ ...prev, themeId: tid }))}
+                        className={`flex items-center gap-2 rounded-xl border p-2 text-left transition ${
+                          active
+                            ? 'border-[#087F5B] bg-[#F2FBF7] ring-2 ring-[#087F5B]/20 dark:border-emerald-500 dark:bg-emerald-950/30'
+                            : 'border-[#DCE8E1] bg-white hover:bg-[#F7FBF9] dark:border-slate-700 dark:bg-slate-800/60 dark:hover:bg-slate-800'
+                        }`}
                       >
-                        অধ্যক্ষের স্বাক্ষর
-                      </div>
-                    </div>
-                    <VerificationQrSvg
-                      value={`${settings.schoolNameEn}|${selectedStudent.studentIdCode}|${selectedStudent.rollNumber}`}
-                      size={70}
-                    />
-                  </div>
+                        <div className="flex shrink-0 -space-x-1">
+                          {palette.swatch.map((hex, i) => (
+                            <span
+                              key={i}
+                              className="h-4 w-4 rounded-full border border-white shadow-2xs"
+                              style={{ backgroundColor: hex }}
+                            />
+                          ))}
+                        </div>
+                        <span className="truncate text-[11px] font-bold text-[#123B67] dark:text-slate-200">
+                          {palette.labelEn.split('&')[0].trim()}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
-            ) : (
-              <p className="text-xs text-[#587064] dark:text-slate-400">কোনো শিক্ষার্থী পাওয়া যায়নি।</p>
-            )}
+
+              {/* Editable English Details (auto-filled from student record) */}
+              {selectedStudent && (() => {
+                const autoEn = getEnglishStudentSummary(selectedStudent);
+                return (
+                  <div className="space-y-2.5 border-t border-[#EAF2ED] pt-3.5 dark:border-slate-800">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold text-[#123B67] dark:text-slate-200">
+                        English Card Details (Live Edit)
+                      </span>
+                      {(idCardConfig.studentNameOverride ||
+                        idCardConfig.fatherNameOverride ||
+                        idCardConfig.divisionOverride) && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setIdCardConfig((prev) => ({
+                              ...prev,
+                              studentNameOverride: '',
+                              fatherNameOverride: '',
+                              divisionOverride: '',
+                            }))
+                          }
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-[#087F5B] hover:underline"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                          রিসেট
+                        </button>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-[11px] font-bold text-[#526B78] dark:text-slate-400">
+                        Student Name (English)
+                      </label>
+                      <input
+                        value={idCardConfig.studentNameOverride ?? ''}
+                        onChange={(e) =>
+                          setIdCardConfig((prev) => ({
+                            ...prev,
+                            studentNameOverride: e.target.value,
+                          }))
+                        }
+                        placeholder={autoEn.nameEn}
+                        className={inputClass}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="mb-1 block text-[11px] font-bold text-[#526B78] dark:text-slate-400">
+                          Father&apos;s Name (English)
+                        </label>
+                        <input
+                          value={idCardConfig.fatherNameOverride ?? ''}
+                          onChange={(e) =>
+                            setIdCardConfig((prev) => ({
+                              ...prev,
+                              fatherNameOverride: e.target.value,
+                            }))
+                          }
+                          placeholder={autoEn.fatherEn || 'Guardian Name'}
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-[11px] font-bold text-[#526B78] dark:text-slate-400">
+                          Division
+                        </label>
+                        <input
+                          value={idCardConfig.divisionOverride ?? ''}
+                          onChange={(e) =>
+                            setIdCardConfig((prev) => ({
+                              ...prev,
+                              divisionOverride: e.target.value,
+                            }))
+                          }
+                          placeholder={autoEn.divisionEn}
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="mb-1 block text-[11px] font-bold text-[#526B78] dark:text-slate-400">
+                          Session
+                        </label>
+                        <input
+                          value={idCardConfig.sessionLabel}
+                          onChange={(e) =>
+                            setIdCardConfig((prev) => ({ ...prev, sessionLabel: e.target.value }))
+                          }
+                          placeholder="2026"
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-[11px] font-bold text-[#526B78] dark:text-slate-400">
+                          Valid Thru
+                        </label>
+                        <input
+                          value={idCardConfig.validThru}
+                          onChange={(e) =>
+                            setIdCardConfig((prev) => ({ ...prev, validThru: e.target.value }))
+                          }
+                          placeholder="Dec 2026"
+                          className={inputClass}
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-[11px] font-bold text-[#526B78] dark:text-slate-400">
+                          Authority
+                        </label>
+                        <input
+                          value={idCardConfig.authorityTitle}
+                          onChange={(e) =>
+                            setIdCardConfig((prev) => ({
+                              ...prev,
+                              authorityTitle: e.target.value,
+                            }))
+                          }
+                          placeholder="Principal"
+                          className={inputClass}
+                        />
+                      </div>
+                    </div>
+
+                    <label className="flex cursor-pointer items-center gap-2 pt-1 text-xs font-bold text-[#123B67] dark:text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={showLanyardPreview}
+                        onChange={(e) => setShowLanyardPreview(e.target.checked)}
+                        className="h-4 w-4 rounded border-[#CFE0D6] text-[#087F5B] focus:ring-[#087F5B]"
+                      />
+                      ল্যানিয়ার্ড হোল্ডার প্রিভিউ দেখুন (ডাউনলোডে শুধু পরিষ্কার কার্ড থাকবে)
+                    </label>
+                  </div>
+                );
+              })()}
+
+              {/* Download & Bulk Print Actions */}
+              <div className="space-y-2 border-t border-[#EAF2ED] pt-3.5 dark:border-slate-800">
+                <button
+                  type="button"
+                  disabled={!selectedStudent || downloadingIdCard || Boolean(bulkIdProgress)}
+                  onClick={() => void handleDownloadIdCardPdf()}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#087F5B] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#06684A] disabled:opacity-50"
+                >
+                  {downloadingIdCard ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5" />
+                  )}
+                  Front + Back Print PDF (CR80 Standard)
+                </button>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    disabled={!selectedStudent || downloadingIdCard || Boolean(bulkIdProgress)}
+                    onClick={() => void handleDownloadIdCardDualPng()}
+                    className="inline-flex items-center justify-center gap-1 rounded-xl border border-[#087F5B] bg-white px-2.5 py-2 text-[11px] font-bold text-[#087F5B] transition hover:bg-[#F2F8F5] disabled:opacity-50 dark:bg-slate-800 dark:text-emerald-300"
+                  >
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    Both PNG
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!selectedStudent || downloadingIdCard || Boolean(bulkIdProgress)}
+                    onClick={() => void handleDownloadIdCardSide('Front')}
+                    className="inline-flex items-center justify-center gap-1 rounded-xl border border-[#CFE0D6] bg-white px-2.5 py-2 text-[11px] font-bold text-[#123B67] transition hover:bg-[#F2F8F5] disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  >
+                    Front PNG
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!selectedStudent || downloadingIdCard || Boolean(bulkIdProgress)}
+                    onClick={() => void handleDownloadIdCardSide('Back')}
+                    className="inline-flex items-center justify-center gap-1 rounded-xl border border-[#CFE0D6] bg-white px-2.5 py-2 text-[11px] font-bold text-[#123B67] transition hover:bg-[#F2F8F5] disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  >
+                    Back PNG
+                  </button>
+                </div>
+
+                {selectedClass !== 'ALL' && classStudentsForBulk.length > 0 && (
+                  <button
+                    type="button"
+                    disabled={Boolean(bulkIdProgress) || downloadingIdCard}
+                    onClick={() => void handleDownloadClassIdCards()}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#123B67] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-[#0C2B4D] disabled:opacity-60"
+                  >
+                    {bulkIdProgress ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Layers className="h-3.5 w-3.5 text-[#F4A62A]" />
+                    )}
+                    {bulkIdProgress
+                      ? `তৈরি হচ্ছে ${toBnDigits(bulkIdProgress.current)}/${toBnDigits(bulkIdProgress.total)}...`
+                      : `পুরো ${labelClass(selectedClass)} ডুপ্লেক্স A4 PDF (${toBnDigits(classStudentsForBulk.length)} জন · ৯ কার্ড/পৃষ্ঠা)`}
+                  </button>
+                )}
+
+                {selectedStudent && (
+                  <Link
+                    to={buildStudentVerificationPath(selectedStudent.studentIdCode)}
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#21A9D6]/50 bg-[#EAF7FC] px-3.5 py-2 text-xs font-bold text-[#0B5C7A] transition hover:bg-[#21A9D6] hover:text-white dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300"
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    লাইভ QR যাচাই পেজ দেখুন
+                    <ExternalLink className="h-3 w-3" />
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            {/* RIGHT DUAL-SIDED LIVE ID CARD SHOWCASE */}
+            <div className="flex flex-col justify-between rounded-2xl border border-[#DCE8E1] bg-gradient-to-br from-[#E9F2F0] via-[#EEF4F7] to-[#E5EDF2] p-5 sm:p-7 xl:col-span-8 dark:border-slate-800 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span className="font-extrabold text-[#123B67] dark:text-white">
+                  Front &amp; Back Live Preview · CR80 Portrait (54mm × 86mm)
+                </span>
+                <span className="font-semibold text-[#4B6672] dark:text-slate-400">
+                  100% English · Real Scannable QR Verification
+                </span>
+              </div>
+
+              {selectedStudent ? (
+                <div className="flex flex-wrap items-start justify-center gap-8 py-2">
+                  {/* FRONT CARD WITH OPTIONAL LANYARD HOLDER MOCKUP */}
+                  <div className="flex flex-col items-center">
+                    {showLanyardPreview && (
+                      <div className="flex flex-col items-center" aria-hidden="true">
+                        <div
+                          className="h-9 w-8 rounded-t-sm shadow-inner"
+                          style={{
+                            background: `linear-gradient(90deg, ${ID_CARD_THEMES[idCardConfig.themeId].deepDark}, ${ID_CARD_THEMES[idCardConfig.themeId].primary}, ${ID_CARD_THEMES[idCardConfig.themeId].deepDark})`,
+                          }}
+                        />
+                        <div className="h-3.5 w-5 rounded-b-md border border-slate-400 bg-gradient-to-b from-slate-200 to-slate-400 shadow-xs" />
+                        <div className="-mt-1 h-4 w-3 rounded-full border-2 border-slate-400 bg-transparent" />
+                      </div>
+                    )}
+                    <div
+                      className={
+                        showLanyardPreview
+                          ? 'relative -mt-1.5 rounded-[22px] border border-white/80 bg-white/55 p-3 pt-7 shadow-xl backdrop-blur-xs dark:border-slate-700/80 dark:bg-slate-800/50'
+                          : 'shadow-2xl rounded-[16px]'
+                      }
+                    >
+                      {showLanyardPreview && (
+                        <div
+                          className="absolute top-2.5 left-1/2 flex -translate-x-1/2 items-center gap-4"
+                          aria-hidden="true"
+                        >
+                          <span className="h-1.5 w-5 rounded-full bg-slate-400/50 shadow-inner" />
+                          <span className="h-2.5 w-2.5 rounded-full border border-slate-400/60 bg-slate-300/60" />
+                          <span className="h-1.5 w-5 rounded-full bg-slate-400/50 shadow-inner" />
+                        </div>
+                      )}
+                      <StudentIdCardFront
+                        ref={idCardFrontRef}
+                        student={selectedStudent}
+                        settings={settings}
+                        config={idCardConfig}
+                      />
+                    </div>
+                    <span className="mt-3 text-[11px] font-extrabold tracking-wider text-[#123B67] uppercase dark:text-slate-300">
+                      Front Side · Identity
+                    </span>
+                  </div>
+
+                  {/* BACK CARD WITH OPTIONAL LANYARD HOLDER MOCKUP */}
+                  <div className="flex flex-col items-center">
+                    {showLanyardPreview && (
+                      <div className="flex flex-col items-center" aria-hidden="true">
+                        <div
+                          className="h-9 w-8 rounded-t-sm shadow-inner"
+                          style={{
+                            background: `linear-gradient(90deg, ${ID_CARD_THEMES[idCardConfig.themeId].deepDark}, ${ID_CARD_THEMES[idCardConfig.themeId].primary}, ${ID_CARD_THEMES[idCardConfig.themeId].deepDark})`,
+                          }}
+                        />
+                        <div className="h-3.5 w-5 rounded-b-md border border-slate-400 bg-gradient-to-b from-slate-200 to-slate-400 shadow-xs" />
+                        <div className="-mt-1 h-4 w-3 rounded-full border-2 border-slate-400 bg-transparent" />
+                      </div>
+                    )}
+                    <div
+                      className={
+                        showLanyardPreview
+                          ? 'relative -mt-1.5 rounded-[22px] border border-white/80 bg-white/55 p-3 pt-7 shadow-xl backdrop-blur-xs dark:border-slate-700/80 dark:bg-slate-800/50'
+                          : 'shadow-2xl rounded-[16px]'
+                      }
+                    >
+                      {showLanyardPreview && (
+                        <div
+                          className="absolute top-2.5 left-1/2 flex -translate-x-1/2 items-center gap-4"
+                          aria-hidden="true"
+                        >
+                          <span className="h-1.5 w-5 rounded-full bg-slate-400/50 shadow-inner" />
+                          <span className="h-2.5 w-2.5 rounded-full border border-slate-400/60 bg-slate-300/60" />
+                          <span className="h-1.5 w-5 rounded-full bg-slate-400/50 shadow-inner" />
+                        </div>
+                      )}
+                      <StudentIdCardBack
+                        ref={idCardBackRef}
+                        student={selectedStudent}
+                        settings={settings}
+                        config={idCardConfig}
+                      />
+                    </div>
+                    <span className="mt-3 text-[11px] font-extrabold tracking-wider text-[#087F5B] uppercase dark:text-emerald-300">
+                      Back Side · Instructions &amp; QR
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="py-16 text-center text-xs text-[#587064] dark:text-slate-400">
+                  আইডি কার্ড দেখতে একজন শিক্ষার্থী নির্বাচন করুন।
+                </p>
+              )}
+
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#D2E2DC] pt-3 text-[11px] text-[#4B6672] dark:border-slate-800 dark:text-slate-400">
+                <span>
+                  পিছনের QR কোডটি যেকোনো স্মার্টফোন ক্যামেরা দিয়ে স্ক্যান করলে শিক্ষার্থীর অনলাইন ভেরিফিকেশন পেজ ওপেন হবে।
+                </span>
+                {selectedClass === 'ALL' && (
+                  <span className="font-bold text-[#087F5B] dark:text-emerald-300">
+                    পুরো শ্রেণির ডুপ্লেক্স PDF পেতে বামে শ্রেণি নির্বাচন করুন ←
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -809,7 +1361,10 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
               <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 <select
                   value={certType}
-                  onChange={(e) => setCertType(e.target.value as CertificateRecord['certificateType'])}
+                  onChange={(e) => {
+                    setActiveCert(null);
+                    setCertType(e.target.value as CertificateRecord['certificateType']);
+                  }}
                   className={inputClass}
                 >
                   {Object.entries(CERTIFICATE_TYPE_BN).map(([k, v]) => (
@@ -819,9 +1374,12 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
                   ))}
                 </select>
                 <input
-                  placeholder="মন্তব্য / ছাড়পত্রের কারণ (ঐচ্ছিক)"
+                  placeholder="বিশেষ মন্তব্য / ছাড়পত্রের কারণ (ঐচ্ছিক)"
                   value={remarks}
-                  onChange={(e) => setRemarks(e.target.value)}
+                  onChange={(e) => {
+                    if (activeCert) setActiveCert(null);
+                    setRemarks(e.target.value);
+                  }}
                   className={inputClass}
                 />
                 <button
@@ -829,130 +1387,72 @@ export const CertificatesModule: React.FC<Props> = ({ currentUser }) => {
                   disabled={saving || !selectedStudent}
                   className="rounded-xl bg-[#087F5B] px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-[#06684A] disabled:opacity-60"
                 >
-                  {saving ? 'তৈরি হচ্ছে...' : 'সনদ / TC ইস্যু করুন'}
+                  {saving ? 'তৈরি হচ্ছে...' : 'সনদ ইস্যু ও সংরক্ষণ করুন'}
                 </button>
               </div>
             </form>
           )}
 
-          {activeCert && (
+          {previewCert && (
             <div className="space-y-3 rounded-2xl border border-[#DCE8E1] bg-[#EDF3EF] p-5 dark:border-slate-800 dark:bg-slate-950/70">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs font-extrabold text-[#123B67] dark:text-white">
-                  প্রিভিউ: {CERTIFICATE_TYPE_BN[activeCert.certificateType]} ({activeCert.certificateNo})
-                </p>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-xs font-extrabold text-[#123B67] dark:text-white">
+                    {activeCert ? 'ইস্যুকৃত সনদ:' : 'লাইভ প্রিভিউ:'}{' '}
+                    {CERTIFICATE_TYPE_BN[previewCert.certificateType]} ({previewCert.certificateNo})
+                  </p>
+                  {!activeCert && (
+                    <span className="text-[11px] font-semibold text-[#587064] dark:text-slate-400">
+                      · রেকর্ডে সেভ করতে উপরে &ldquo;সনদ ইস্যু ও সংরক্ষণ করুন&rdquo; ক্লিক করুন
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => void handleDownloadCertificatePdf()}
                     className="inline-flex items-center gap-1.5 rounded-xl bg-[#087F5B] px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-[#06684A]"
                   >
                     <Download className="h-3.5 w-3.5" />
-                    পিডিএফ ডাউনলোড
+                    A4 পিডিএফ ডাউনলোড
                   </button>
                   <button
                     type="button"
-                    onClick={() => setActiveCert(null)}
-                    className="inline-flex items-center gap-1 rounded-xl border border-[#CFE0D6] bg-white px-3 py-1.5 text-xs font-bold text-[#263B35] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                    onClick={() => void handleDownloadCertificatePng()}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#087F5B] bg-white px-3.5 py-1.5 text-xs font-bold text-[#087F5B] transition hover:bg-[#F2F8F5] dark:bg-slate-800 dark:text-emerald-300"
                   >
-                    <X className="h-3.5 w-3.5" />
-                    বন্ধ
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    HD PNG
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#CFE0D6] bg-white px-3 py-1.5 text-xs font-bold text-[#123B67] transition hover:bg-[#F2F8F5] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  >
+                    <Printer className="h-3.5 w-3.5" />
+                    প্রিন্ট
+                  </button>
+                  {activeCert && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveCert(null)}
+                      className="inline-flex items-center gap-1 rounded-xl border border-[#CFE0D6] bg-white px-3 py-1.5 text-xs font-bold text-[#263B35] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      নতুন প্রিভিউ
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
-                <div
-                  ref={certRef}
-                  style={{
-                    width: '860px',
-                    minHeight: '590px',
-                    margin: '0 auto',
-                    backgroundColor: '#FFFFFF',
-                    border: '8px double #087F5B',
-                    padding: '38px 48px',
-                    fontFamily: "'Kalpurush', 'Hind Siliguri', sans-serif",
-                    color: '#263B35',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <div>
-                    <div style={{ textAlign: 'center', borderBottom: '2px solid #087F5B', paddingBottom: '14px' }}>
-                      <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 700, color: '#123B67' }}>
-                        {settings.schoolNameBn}
-                      </h1>
-                      <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#456154' }}>
-                        {settings.address} · মোবাইল: {settings.phone}
-                      </p>
-                      <div
-                        style={{
-                          display: 'inline-block',
-                          marginTop: '12px',
-                          backgroundColor: '#087F5B',
-                          color: '#FFFFFF',
-                          padding: '5px 28px',
-                          borderRadius: '6px',
-                          fontSize: '19px',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {CERTIFICATE_TYPE_BN[activeCert.certificateType]}
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        marginTop: '16px',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                      }}
-                    >
-                      <span>সনদ নং: {activeCert.certificateNo}</span>
-                      <span>ইস্যুর তারিখ: {toBnDigits(activeCert.issueDate)}</span>
-                    </div>
-
-                    <p style={{ marginTop: '28px', fontSize: '18px', lineHeight: 2, textAlign: 'justify' }}>
-                      এই মর্মে প্রত্যয়ন করা যাচ্ছে যে, <strong>{activeCert.studentName}</strong>
-                      {activeCert.fatherName ? `, পিতা: ${activeCert.fatherName}` : ''}
-                      {activeCert.motherName ? `, মাতা: ${activeCert.motherName}` : ''} অত্র{' '}
-                      <strong>{settings.schoolNameBn}</strong>-এর{' '}
-                      <strong>{labelClass(activeCert.className)}</strong>-এর নিয়মিত শিক্ষার্থী (রোল নং:{' '}
-                      <strong>{toBnDigits(activeCert.rollNumber)}</strong>)।{' '}
-                      {activeCert.certificateType === 'TC'
-                        ? 'অভিভাবকের আবেদনের প্রেক্ষিতে এবং প্রতিষ্ঠানের সকল পাওনা পরিশোধ সাপেক্ষে তাকে অত্র প্রতিষ্ঠান হতে ছাড়পত্র (Transfer Certificate) প্রদান করা হলো।'
-                        : 'প্রতিষ্ঠানে অধ্যয়নকালে তার আচার-আচরণ, শৃঙ্খলা ও নৈতিক চরিত্র অত্যন্ত সন্তোষজনক ছিল।'}
-                      {activeCert.reasonOrRemarks ? ` বিশেষ মন্তব্য: ${activeCert.reasonOrRemarks}` : ''}{' '}
-                      আমরা তার উত্তরোত্তর সর্বাঙ্গীণ মঙ্গল ও উজ্জ্বল ভবিষ্যৎ কামনা করি।
-                    </p>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-end',
-                      marginTop: '44px',
-                    }}
-                  >
-                    <VerificationQrSvg value={`${activeCert.certificateNo}|${activeCert.studentName}`} size={68} />
-                    <div
-                      style={{
-                        textAlign: 'center',
-                        width: '210px',
-                        borderTop: '1.5px solid #087F5B',
-                        paddingTop: '6px',
-                      }}
-                    >
-                      <p style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: '#123B67' }}>
-                        প্রিন্সিপাল / অধ্যক্ষ
-                      </p>
-                      <p style={{ margin: 0, fontSize: '13.5px' }}>{settings.schoolNameBn}</p>
-                    </div>
-                  </div>
+              <div className="overflow-x-auto pb-2">
+                <div className="mx-auto w-fit shadow-xl">
+                  <CertificateTemplate
+                    ref={certRef}
+                    certificate={previewCert}
+                    student={previewCertStudent}
+                    settings={settings}
+                  />
                 </div>
               </div>
             </div>

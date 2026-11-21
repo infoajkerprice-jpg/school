@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { usePublicData } from '../../context/PublicDataContext';
 import { GALLERY_CATEGORY_BN, toBnDigits } from '../../i18n';
+import { MobileCardSlider } from '../MobileCardSlider';
 import { EmptyState, PageHeader, PageSkeleton } from '../PageHeader';
 import { useUIFeedback } from '../ToastContext';
 
@@ -29,6 +30,7 @@ export const GalleryPage: React.FC = () => {
   const [category, setCategory] = useState<string>('All');
   const [mediaType, setMediaType] = useState<'all' | 'photo' | 'video'>('all');
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const swipeStartX = useRef<number | null>(null);
 
   const filtered = useMemo(() => {
     return gallery.filter((g) => {
@@ -103,7 +105,7 @@ export const GalleryPage: React.FC = () => {
             setCategory(e.target.value);
             setSelectedIndex(null);
           }}
-          className="rounded-xl border border-[#CBE0D6] bg-[#F8FBF9] px-3.5 py-2 text-xs font-bold text-[#123B67] focus:border-[#087F5B] focus:outline-none"
+          className="min-h-[40px] w-full rounded-xl border border-[#CBE0D6] bg-[#F8FBF9] px-3.5 py-2 text-xs font-bold text-[#123B67] focus:border-[#087F5B] focus:outline-none sm:w-auto"
         >
           <option value="All">সকল বিভাগ</option>
           {Object.entries(GALLERY_CATEGORY_BN).map(([k, v]) => (
@@ -137,7 +139,74 @@ export const GalleryPage: React.FC = () => {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3">
+        <div className="space-y-5">
+          {/* Mobile Featured Single-Card Auto Slider */}
+          <div className="md:hidden">
+            <MobileCardSlider
+              items={filtered.slice(0, 10)}
+              getKey={(item) => item.id}
+              ariaLabel="গ্যালারি হাইলাইট স্লাইডার"
+              intervalMs={3000}
+              transitionMs={500}
+              dotTheme="green"
+              showCounter
+              renderItem={(item, idx) => {
+                const isVideo = item.mediaType === 'video' || Boolean(item.videoUrl);
+                return (
+                  <div className="overflow-hidden rounded-2xl border border-[#D4E6DD] bg-white shadow-[0_4px_16px_rgba(18,59,103,0.07)]">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedIndex(idx)}
+                      className="relative block aspect-[16/10] w-full overflow-hidden bg-[#123B67] text-left"
+                    >
+                      <img
+                        src={item.imageUrl}
+                        alt={item.titleBn || item.title}
+                        referrerPolicy="no-referrer"
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#091E36]/88 via-[#091E36]/20 to-transparent" />
+                      {isVideo && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F4A62A] text-[#123B67] shadow-lg ring-4 ring-white/30">
+                            <Play className="ml-0.5 h-6 w-6 fill-[#123B67]" />
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute inset-x-0 bottom-0 p-3.5 text-white">
+                        <p className="text-[10.5px] font-bold text-[#F4A62A] tabular-nums">
+                          {GALLERY_CATEGORY_BN[item.category] || item.category}
+                          {item.eventDate ? ` · ${toBnDigits(item.eventDate)}` : ''}
+                        </p>
+                        <p className="mt-0.5 line-clamp-2 text-sm font-extrabold leading-snug">
+                          {item.titleBn || item.title}
+                        </p>
+                      </div>
+                    </button>
+                    <div className="flex items-center justify-between gap-2 bg-white px-4 py-2.5 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedIndex(idx)}
+                        className="font-bold text-[#123B67]"
+                      >
+                        {isVideo ? 'ভিডিও দেখুন' : 'বড় করে দেখুন'}
+                      </button>
+                      <Link
+                        to={`/gallery/${item.id}`}
+                        className="inline-flex items-center gap-1 font-bold text-[#087F5B]"
+                      >
+                        বিস্তারিত
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              }}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-5 md:grid-cols-3">
           {filtered.map((item, idx) => {
             const isVideo = item.mediaType === 'video' || Boolean(item.videoUrl);
             return (
@@ -203,6 +272,7 @@ export const GalleryPage: React.FC = () => {
               </div>
             );
           })}
+          </div>
         </div>
       )}
 
@@ -215,6 +285,23 @@ export const GalleryPage: React.FC = () => {
           <div
             className="sheet-enter w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
+            onTouchStart={(e) => {
+              swipeStartX.current = e.touches[0]?.clientX ?? null;
+            }}
+            onTouchEnd={(e) => {
+              if (swipeStartX.current === null || filtered.length <= 1) return;
+              const endX = e.changedTouches[0]?.clientX ?? swipeStartX.current;
+              const delta = endX - swipeStartX.current;
+              if (Math.abs(delta) > 40) {
+                setSelectedIndex((cur) => {
+                  if (cur === null) return null;
+                  return delta < 0
+                    ? (cur + 1) % filtered.length
+                    : (cur - 1 + filtered.length) % filtered.length;
+                });
+              }
+              swipeStartX.current = null;
+            }}
           >
             <div className="flex items-center justify-between bg-gradient-to-r from-[#123B67] to-[#087F5B] px-5 py-3.5 text-white">
               <div className="min-w-0 pr-3">

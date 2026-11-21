@@ -66,7 +66,35 @@ export const ContactPage: React.FC = () => {
         }
       />
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      {/* Mobile Quick One-Tap Contact Row (< md) */}
+      <div className="grid grid-cols-3 gap-2 md:hidden">
+        <a
+          href={telHref}
+          className="flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-2xl bg-[#087F5B] p-2 text-center text-[11px] font-extrabold text-white shadow-xs transition active:scale-[0.98]"
+        >
+          <Phone className="h-4 w-4 text-[#F4A62A]" />
+          <span>কল করুন</span>
+        </a>
+        <button
+          type="button"
+          onClick={() => void handleCopyPhone()}
+          className="flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-2xl border border-[#D4E6DD] bg-white p-2 text-center text-[11px] font-extrabold text-[#123B67] shadow-2xs transition active:scale-[0.98]"
+        >
+          <Copy className="h-4 w-4 text-[#21A9D6]" />
+          <span>নম্বর কপি</span>
+        </button>
+        <a
+          href={mapOpenUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex min-h-[54px] flex-col items-center justify-center gap-1 rounded-2xl bg-[#123B67] p-2 text-center text-[11px] font-extrabold text-white shadow-xs transition active:scale-[0.98]"
+        >
+          <MapPin className="h-4 w-4 text-[#F4A62A]" />
+          <span>গুগল ম্যাপ</span>
+        </a>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
         {/* Left: Colorful Contact Channels */}
         <div className="space-y-4 rounded-2xl border border-[#D4E6DD] bg-white p-6 shadow-xs">
           <div>
@@ -279,7 +307,7 @@ export const ContactPage: React.FC = () => {
             গুগল ম্যাপে বড় করে দেখুন
           </a>
         </div>
-        <div className="h-[360px] w-full bg-[#EDF4F0]">
+        <div className="h-[250px] w-full bg-[#EDF4F0] sm:h-[360px]">
           <iframe
             title="শাহ ইসলামিক স্কুল এন্ড কলেজ — গুগল ম্যাপ"
             src={mapEmbedUrl}

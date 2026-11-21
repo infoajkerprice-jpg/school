@@ -22,6 +22,7 @@ import {
 } from '../../lib/programDetails';
 import { toBnDigits } from '../../i18n';
 import { CAMPUS_IMAGES } from '../../types';
+import { MobileCardSlider } from '../MobileCardSlider';
 
 function sanitizeTel(phone?: string): string {
   return (phone || '+8801711759705').replace(/[^\d+]/g, '');
@@ -242,7 +243,49 @@ export const EducationProgramsPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-3">
+        {/* Mobile Single-Card Slider */}
+        <div className="mt-5 md:hidden">
+          <MobileCardSlider
+            items={mediums}
+            getKey={(item) => item.title}
+            ariaLabel="শিক্ষার মাধ্যম স্লাইডার"
+            intervalMs={3000}
+            transitionMs={500}
+            dotTheme="green"
+            renderItem={(item, idx) => {
+              const theme = MEDIUM_ACCENTS[idx % MEDIUM_ACCENTS.length];
+              return (
+                <div
+                  className={`flex h-full flex-col justify-between rounded-2xl border border-[#E2EDE7] bg-[#FAFDFB] p-5 ${theme.border}`}
+                >
+                  <div>
+                    <span
+                      className={`inline-block rounded-lg px-2.5 py-1 font-mono text-xs font-extrabold tabular-nums ${theme.badge}`}
+                    >
+                      {item.indexBn}
+                    </span>
+                    <h3 className="mt-3 text-base font-extrabold text-[#123B67]">{item.title}</h3>
+                    <p className={`mt-1 text-xs font-bold ${theme.subtitle}`}>{item.subtitle}</p>
+                    <p className="mt-2.5 text-xs leading-relaxed text-[#263B35]">
+                      {item.description}
+                    </p>
+                  </div>
+                  <ul className="mt-4 space-y-2 border-t border-[#E6F0EA] pt-3.5 text-xs font-semibold text-[#263B35]">
+                    {item.focusPoints.map((pt) => (
+                      <li key={pt} className="flex items-start gap-2">
+                        <CheckCircle2 className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${theme.check}`} />
+                        <span>{pt}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            }}
+          />
+        </div>
+
+        {/* Desktop & Tablet 3-Column Grid */}
+        <div className="mt-6 hidden gap-5 md:grid md:grid-cols-3">
           {mediums.map((item, idx) => {
             const theme = MEDIUM_ACCENTS[idx % MEDIUM_ACCENTS.length];
             return (

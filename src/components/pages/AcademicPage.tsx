@@ -149,7 +149,7 @@ export const AcademicPage: React.FC<AcademicPageProps> = ({ section = 'class_rou
   const currentMeta = SECTION_META[section];
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-4 sm:space-y-7">
       <PageHeader
         breadcrumbs={[
           { label: 'একাডেমিক কার্যক্রম', to: '/academic' },
@@ -209,11 +209,11 @@ export const AcademicPage: React.FC<AcademicPageProps> = ({ section = 'class_rou
                       শ্রেণি ও শাখা নির্বাচন করে হালনাগাদ সময়সূচি দেখুন
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-2.5">
                     <select
                       value={routineClass}
                       onChange={(e) => setRoutineClass(e.target.value)}
-                      className="rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3.5 py-2.5 text-xs font-bold text-[#123B67] focus:border-[#087F5B] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#087F5B]/20"
+                      className="min-h-[42px] w-full rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3 py-2 text-xs font-bold text-[#123B67] focus:border-[#087F5B] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#087F5B]/20 sm:w-auto sm:px-3.5 sm:py-2.5"
                     >
                       {BD_CLASSES.map((c) => (
                         <option key={c} value={c}>
@@ -225,7 +225,7 @@ export const AcademicPage: React.FC<AcademicPageProps> = ({ section = 'class_rou
                       <select
                         value={routineSection}
                         onChange={(e) => setRoutineSection(e.target.value)}
-                        className="rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3.5 py-2.5 text-xs font-bold text-[#123B67] focus:border-[#087F5B] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#087F5B]/20"
+                        className="min-h-[42px] w-full rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3 py-2 text-xs font-bold text-[#123B67] focus:border-[#087F5B] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#087F5B]/20 sm:w-auto sm:px-3.5 sm:py-2.5"
                       >
                         {BD_SECTIONS.map((sec) => (
                           <option key={sec} value={sec}>
@@ -244,45 +244,80 @@ export const AcademicPage: React.FC<AcademicPageProps> = ({ section = 'class_rou
                     description={`${labelClass(routineClass)}-এর জন্য এখনো রুটিন প্রকাশ করা হয়নি। অন্য শ্রেণি বা শাখা নির্বাচন করে দেখতে পারেন।`}
                   />
                 ) : (
-                  <div className="overflow-x-auto rounded-2xl border border-[#DCE8E1]">
-                    <table className="w-full min-w-[580px] text-left text-xs sm:text-sm">
-                      <thead className="bg-gradient-to-r from-[#123B67] to-[#087F5B] text-white">
-                        <tr>
-                          <th className="px-4 py-3.5 font-bold">
-                            {section === 'exam_routine' ? 'তারিখ' : 'বার'}
-                          </th>
-                          <th className="px-4 py-3.5 font-bold">সময়</th>
-                          <th className="px-4 py-3.5 font-bold">বিষয়</th>
-                          <th className="px-4 py-3.5 font-bold">
-                            {section === 'exam_routine' ? 'পরীক্ষার নাম' : 'শিক্ষক'}
-                          </th>
-                          <th className="px-4 py-3.5 font-bold">কক্ষ নং</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#EAF2ED] bg-white">
-                        {visibleRoutines.map((r) => (
-                          <tr key={r.id} className="transition hover:bg-[#F2F8F5]">
-                            <td className="px-4 py-3.5 font-bold text-[#123B67]">
+                  <>
+                    {/* Mobile Native Routine Cards (< md) */}
+                    <div className="space-y-2.5 md:hidden">
+                      {visibleRoutines.map((r) => (
+                        <div
+                          key={`m-${r.id}`}
+                          className="rounded-xl border border-[#DCE8E1] bg-[#FAFDFB] p-3.5 shadow-2xs"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="rounded-lg bg-[#123B67]/10 px-2.5 py-0.5 text-[11px] font-extrabold text-[#123B67]">
                               {labelDay(r.dayOrDate)}
-                            </td>
-                            <td className="px-4 py-3.5 font-medium text-[#263B35] tabular-nums">
-                              <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF8FD] px-2.5 py-1 text-xs font-bold text-[#0E7DA3]">
-                                <Clock className="h-3.5 w-3.5" />
-                                {toBnDigits(r.timeSlot)}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3.5 font-extrabold text-[#087F5B]">{r.subject}</td>
-                            <td className="px-4 py-3.5 font-medium text-[#263B35]">
-                              {section === 'exam_routine' ? r.examName || '—' : r.teacherName || '—'}
-                            </td>
-                            <td className="px-4 py-3.5 font-bold text-[#805AD5] tabular-nums">
-                              {toBnDigits(r.room || '—')}
-                            </td>
+                            </span>
+                            <span className="inline-flex items-center gap-1 rounded-lg bg-[#EBF8FD] px-2.5 py-0.5 text-[11px] font-bold text-[#0E7DA3] tabular-nums">
+                              <Clock className="h-3 w-3" />
+                              {toBnDigits(r.timeSlot)}
+                            </span>
+                          </div>
+                          <p className="mt-2 text-sm font-extrabold text-[#087F5B]">{r.subject}</p>
+                          <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px] font-semibold text-[#526B78]">
+                            <span className="truncate">
+                              {section === 'exam_routine' ? 'পরীক্ষা: ' : 'শিক্ষক: '}
+                              <strong className="text-[#123B67]">
+                                {section === 'exam_routine' ? r.examName || '—' : r.teacherName || '—'}
+                              </strong>
+                            </span>
+                            <span className="shrink-0 font-bold text-[#805AD5] tabular-nums">
+                              কক্ষ: {toBnDigits(r.room || '—')}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Desktop Routine Table (md+) */}
+                    <div className="hidden overflow-x-auto rounded-2xl border border-[#DCE8E1] md:block">
+                      <table className="w-full min-w-[580px] text-left text-xs sm:text-sm">
+                        <thead className="bg-gradient-to-r from-[#123B67] to-[#087F5B] text-white">
+                          <tr>
+                            <th className="px-4 py-3.5 font-bold">
+                              {section === 'exam_routine' ? 'তারিখ' : 'বার'}
+                            </th>
+                            <th className="px-4 py-3.5 font-bold">সময়</th>
+                            <th className="px-4 py-3.5 font-bold">বিষয়</th>
+                            <th className="px-4 py-3.5 font-bold">
+                              {section === 'exam_routine' ? 'পরীক্ষার নাম' : 'শিক্ষক'}
+                            </th>
+                            <th className="px-4 py-3.5 font-bold">কক্ষ নং</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody className="divide-y divide-[#EAF2ED] bg-white">
+                          {visibleRoutines.map((r) => (
+                            <tr key={r.id} className="transition hover:bg-[#F2F8F5]">
+                              <td className="px-4 py-3.5 font-bold text-[#123B67]">
+                                {labelDay(r.dayOrDate)}
+                              </td>
+                              <td className="px-4 py-3.5 font-medium text-[#263B35] tabular-nums">
+                                <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF8FD] px-2.5 py-1 text-xs font-bold text-[#0E7DA3]">
+                                  <Clock className="h-3.5 w-3.5" />
+                                  {toBnDigits(r.timeSlot)}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3.5 font-extrabold text-[#087F5B]">{r.subject}</td>
+                              <td className="px-4 py-3.5 font-medium text-[#263B35]">
+                                {section === 'exam_routine' ? r.examName || '—' : r.teacherName || '—'}
+                              </td>
+                              <td className="px-4 py-3.5 font-bold text-[#805AD5] tabular-nums">
+                                {toBnDigits(r.room || '—')}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
                 )}
               </div>
             )}
@@ -298,20 +333,20 @@ export const AcademicPage: React.FC<AcademicPageProps> = ({ section = 'class_rou
                       মোট {toBnDigits(filteredSyllabus.length)}টি শিক্ষাসামগ্রী পাওয়া গেছে
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <div className="relative">
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-2.5">
+                    <div className="relative w-full sm:w-52">
                       <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[#647E8B]" />
                       <input
                         value={syllabusQuery}
                         onChange={(e) => setSyllabusQuery(e.target.value)}
                         placeholder="বিষয় বা শিরোনাম খুঁজুন..."
-                        className="w-52 rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] py-2 pr-3 pl-9 text-xs text-[#263B35] focus:border-[#805AD5] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#805AD5]/20"
+                        className="min-h-[42px] w-full rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] py-2 pr-3 pl-9 text-xs text-[#263B35] focus:border-[#805AD5] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#805AD5]/20"
                       />
                     </div>
                     <select
                       value={syllabusClass}
                       onChange={(e) => setSyllabusClass(e.target.value)}
-                      className="rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3 py-2 text-xs font-bold text-[#123B67] focus:border-[#805AD5] focus:outline-none"
+                      className="min-h-[42px] w-full rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3 py-2 text-xs font-bold text-[#123B67] focus:border-[#805AD5] focus:outline-none sm:w-auto"
                     >
                       <option value="ALL">সকল শ্রেণি</option>
                       {BD_CLASSES.map((c) => (

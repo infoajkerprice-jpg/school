@@ -21,6 +21,7 @@ import {
 } from 'firebase/firestore';
 import { db, handleFirestoreError, makeSafeDocId, OperationType } from '../../lib/firebase';
 import { clampStr } from '../../lib/grading';
+import { MAX_BANNER_IMAGE_LEN, sanitizeImageUrlForFirestore } from '../../lib/imageUpload';
 import { downloadNoticePdf } from '../../lib/reports';
 import {
   AUDIENCE_BN,
@@ -36,6 +37,7 @@ import {
   type NoticeItem,
   type UserAccount,
 } from '../../types';
+import { ImageUploadField } from '../ImageUploadField';
 import { useUIFeedback } from '../ToastContext';
 
 interface Props {
@@ -215,7 +217,7 @@ export const NoticesNewsModule: React.FC<Props> = ({ currentUser, initialTab = '
         body: clampStr(newsForm.body || newsForm.summary, 4000),
         category: newsForm.category,
         eventDate: newsForm.eventDate,
-        imageUrl: clampStr(newsForm.imageUrl, 500),
+        imageUrl: sanitizeImageUrlForFirestore(newsForm.imageUrl, MAX_BANNER_IMAGE_LEN),
         authorUid: currentUser.uid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -249,7 +251,7 @@ export const NoticesNewsModule: React.FC<Props> = ({ currentUser, initialTab = '
         caption: clampStr(galleryForm.caption, 400),
         category: galleryForm.category,
         mediaType: galleryForm.mediaType,
-        imageUrl: clampStr(galleryForm.imageUrl, 500),
+        imageUrl: sanitizeImageUrlForFirestore(galleryForm.imageUrl, MAX_BANNER_IMAGE_LEN),
         videoUrl: galleryForm.mediaType === 'video' ? clampStr(galleryForm.videoUrl, 500) : '',
         eventDate: galleryForm.eventDate,
         authorUid: currentUser.uid,
@@ -591,22 +593,14 @@ export const NoticesNewsModule: React.FC<Props> = ({ currentUser, initialTab = '
                     className={inputClass}
                   />
                 </div>
-                <div className="sm:col-span-2">
-                  <label className={labelClass}>ছবির লিংক ও প্রিভিউ</label>
-                  <div className="flex items-center gap-2.5">
-                    <input
-                      value={newsForm.imageUrl}
-                      onChange={(e) => setNewsForm({ ...newsForm, imageUrl: e.target.value })}
-                      className={inputClass}
-                    />
-                    {newsForm.imageUrl && (
-                      <img
-                        src={newsForm.imageUrl}
-                        alt="News preview"
-                        className="h-10 w-14 shrink-0 rounded-lg border border-[#D4E6DD] object-cover"
-                      />
-                    )}
-                  </div>
+                <div className="sm:col-span-2 lg:col-span-3">
+                  <ImageUploadField
+                    label="সংবাদের ছবি আপলোড (কম্পিউটার বা মোবাইল)"
+                    value={newsForm.imageUrl}
+                    onChange={(url) => setNewsForm({ ...newsForm, imageUrl: url })}
+                    preset="banner"
+                    quickPresets={CAMPUS_PRESETS}
+                  />
                 </div>
                 <div className="sm:col-span-2 lg:col-span-3">
                   <label className={labelClass}>সংক্ষিপ্ত সারসংক্ষেপ *</label>
@@ -729,25 +723,14 @@ export const NoticesNewsModule: React.FC<Props> = ({ currentUser, initialTab = '
                     </select>
                   </div>
                   <div className="sm:col-span-2">
-                    <label className={labelClass}>ছবি / থাম্বনেইল লিংক *</label>
-                    <input
-                      required
+                    <ImageUploadField
+                      label="গ্যালারি ছবি / থাম্বনেইল আপলোড"
                       value={galleryForm.imageUrl}
-                      onChange={(e) => setGalleryForm({ ...galleryForm, imageUrl: e.target.value })}
-                      className={inputClass}
+                      onChange={(url) => setGalleryForm({ ...galleryForm, imageUrl: url })}
+                      preset="banner"
+                      required
+                      quickPresets={CAMPUS_PRESETS}
                     />
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {CAMPUS_PRESETS.map((p) => (
-                        <button
-                          key={p.label}
-                          type="button"
-                          onClick={() => setGalleryForm({ ...galleryForm, imageUrl: p.url })}
-                          className="rounded-lg border border-[#D4E6DD] bg-[#F2F8F5] px-2.5 py-1 text-[11px] font-bold text-[#123B67] transition hover:bg-[#805AD5] hover:text-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                        >
-                          {p.label}
-                        </button>
-                      ))}
-                    </div>
                   </div>
                   {galleryForm.mediaType === 'video' && (
                     <div className="sm:col-span-2">

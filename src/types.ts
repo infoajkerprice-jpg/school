@@ -551,7 +551,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   schoolNameBn: 'শাহ ইসলামিক স্কুল এন্ড কলেজ',
   schoolNameEn: 'Shah Islamic School And College',
   schoolSubtitleBn: 'আধুনিক সাধারণ শিক্ষা ও ইসলামিক মূল্যবোধের সমন্বিত বিদ্যাপীঠ',
-  logoUrl: '',
+  logoUrl: '/school-logo.png',
   eiin: '',
   schoolCode: '',
   regNo: '',

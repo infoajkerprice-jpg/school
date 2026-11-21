@@ -46,6 +46,7 @@ import {
   resolveIslamicPrograms,
 } from '../../lib/programDetails';
 import { HomeSkeleton } from '../SkeletonLoader';
+import { MobileHomeView } from './MobileHomeView';
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -405,7 +406,11 @@ export const HomePage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-7 sm:space-y-8">
+    <>
+      <div className="lg:hidden">
+        <MobileHomeView />
+      </div>
+      <div className="hidden space-y-7 sm:space-y-8 lg:block">
       {/* ==================== 1. MODERN PREMIUM HERO SLIDER ==================== */}
       <section className="relative overflow-hidden rounded-2xl border border-[#CBE0D6] bg-[#123B67] shadow-md">
         <div className="relative h-[300px] w-full sm:h-[385px] lg:h-[460px]">
@@ -1749,6 +1754,7 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };

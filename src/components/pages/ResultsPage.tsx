@@ -20,7 +20,7 @@ import { EmptyState, PageHeader, PageSkeleton } from '../PageHeader';
 import { useUIFeedback } from '../ToastContext';
 
 const FIELD_CLASS =
-  'w-full rounded-xl border border-[#CFE0D6] bg-white px-3.5 py-2.5 text-sm font-medium text-[#263B35] transition focus:border-[#087F5B] focus:outline-none focus:ring-2 focus:ring-[#087F5B]/20';
+  'min-h-[44px] w-full rounded-xl border border-[#CFE0D6] bg-white px-3.5 py-2.5 text-sm font-medium text-[#263B35] transition focus:border-[#087F5B] focus:outline-none focus:ring-2 focus:ring-[#087F5B]/20';
 
 export const ResultsPage: React.FC = () => {
   const { settings, publishedResults, isLoading } = usePublicData();
@@ -136,6 +136,7 @@ export const ResultsPage: React.FC = () => {
             <label className="mb-1.5 block text-xs font-extrabold text-[#123B67]">রোল নম্বর</label>
             <input
               type="text"
+              inputMode="numeric"
               value={resRoll}
               onChange={(e) => setResRoll(e.target.value)}
               placeholder="যেমন: 101 (খালি রাখলে সব)"
@@ -243,33 +244,65 @@ export const ResultsPage: React.FC = () => {
                         {toBnDigits(res.studentRoll)} · {res.examName} ({toBnDigits(res.academicYear)})
                       </p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
                       <button
                         type="button"
                         onClick={() => setPreviewResult(res)}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-white/35 bg-white/15 px-3.5 py-2 text-xs font-bold text-white transition hover:bg-white/25"
+                        className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-white/35 bg-white/15 px-3 py-2 text-xs font-bold text-white transition hover:bg-white/25"
                       >
-                        <Eye className="h-4 w-4" />
-                        মার্কশিট প্রিভিউ
+                        <Eye className="h-4 w-4 shrink-0" />
+                        <span>প্রিভিউ</span>
                       </button>
                       <button
                         type="button"
                         disabled={downloadingId === res.id}
                         onClick={() => void handleDownloadPdf(res)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-[#F4A62A] px-4 py-2 text-xs font-extrabold text-[#123B67] shadow-xs transition hover:bg-[#f7b547] disabled:opacity-65"
+                        className="inline-flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl bg-[#F4A62A] px-3 py-2 text-xs font-extrabold text-[#123B67] shadow-xs transition hover:bg-[#f7b547] disabled:opacity-65 sm:px-4"
                       >
                         {downloadingId === res.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
                         ) : (
-                          <Download className="h-4 w-4" />
+                          <Download className="h-4 w-4 shrink-0" />
                         )}
-                        {downloadingId === res.id ? 'তৈরি হচ্ছে...' : 'মার্কশিট পিডিএফ ডাউনলোড'}
+                        <span className="truncate">
+                          {downloadingId === res.id ? 'তৈরি হচ্ছে...' : 'মার্কশিট পিডিএফ'}
+                        </span>
                       </button>
                     </div>
                   </div>
 
-                  <div className="p-5">
-                    <div className="overflow-x-auto rounded-xl border border-[#E2EDE7]">
+                  <div className="p-4 sm:p-5">
+                    {/* Mobile Subject Cards (< md) */}
+                    <div className="space-y-2 md:hidden">
+                      {res.subjects.map((sub, i) => (
+                        <div
+                          key={`m-${sub.subject}-${i}`}
+                          className="flex items-center justify-between gap-2 rounded-xl border border-[#E2EDE7] bg-[#FAFDFB] px-3.5 py-2.5"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-extrabold text-[#123B67]">
+                              {sub.subject}
+                            </p>
+                            <p className="mt-0.5 text-[11px] font-semibold text-[#526B78] tabular-nums">
+                              নম্বর: <strong className="text-[#123B67]">{toBnDigits(sub.marks)}</strong> /{' '}
+                              {toBnDigits(sub.fullMarks)} · পয়েন্ট: {toBnDigits(sub.point.toFixed(2))}
+                            </p>
+                          </div>
+                          <span
+                            className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-extrabold ${
+                              sub.grade === 'F'
+                                ? 'bg-rose-50 text-rose-700'
+                                : 'bg-[#EDF9F4] text-[#087F5B]'
+                            }`}
+                          >
+                            {sub.grade}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Desktop Marks Table (md+) */}
+                    <div className="hidden overflow-x-auto rounded-xl border border-[#E2EDE7] md:block">
                       <table className="w-full min-w-[520px] text-left text-xs sm:text-sm">
                         <thead className="bg-[#F2F8F5] text-[#123B67]">
                           <tr>

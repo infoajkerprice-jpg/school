@@ -658,7 +658,105 @@ export const FeesModule: React.FC<Props> = ({ currentUser }) => {
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-[#DCE8E1] bg-white shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-            <div className="overflow-x-auto">
+            {/* Mobile Invoice Cards */}
+            <div className="divide-y divide-[#EAF2ED] md:hidden dark:divide-slate-800">
+              {paginatedInvoices.length === 0 ? (
+                <p className="px-4 py-10 text-center text-xs text-[#587064] dark:text-slate-400">
+                  কোনো ফি বিল পাওয়া যায়নি।
+                </p>
+              ) : (
+                paginatedInvoices.map((inv) => (
+                  <div key={inv.id} className="space-y-2.5 p-3.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <span className="rounded-md bg-[#E9F7F1] px-2 py-0.5 text-[10px] font-extrabold text-[#087F5B] tabular-nums dark:bg-emerald-500/20 dark:text-emerald-300">
+                          {inv.invoiceNo}
+                        </span>
+                        <p className="mt-1 truncate text-sm font-extrabold text-[#123B67] dark:text-white">
+                          {inv.studentName}
+                        </p>
+                        <p className="text-[11px] text-[#526B78] tabular-nums dark:text-slate-400">
+                          {labelClass(inv.className)} · রোল {toBnDigits(inv.rollNumber)}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-lg px-2 py-0.5 text-[10.5px] font-bold ${
+                          inv.status === 'Paid'
+                            ? 'bg-[#087F5B]/12 text-[#087F5B] dark:bg-emerald-500/20 dark:text-emerald-300'
+                            : inv.status === 'Partial'
+                            ? 'bg-[#F4A62A]/20 text-[#9A5B00] dark:bg-amber-500/20 dark:text-amber-300'
+                            : 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300'
+                        }`}
+                      >
+                        {FEE_STATUS_BN[inv.status]}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 rounded-xl bg-[#F5F9F7] px-3 py-2 text-xs dark:bg-slate-800/70">
+                      <div className="min-w-0">
+                        <p className="truncate font-bold text-[#123B67] dark:text-slate-100">
+                          {FEE_CATEGORY_BN[inv.feeCategory]}
+                        </p>
+                        <p className="text-[10.5px] text-[#5A7380] dark:text-slate-400">
+                          {inv.month} {toBnDigits(inv.academicYear)}
+                        </p>
+                      </div>
+                      <div className="text-right tabular-nums">
+                        <p className="font-extrabold text-[#123B67] dark:text-white">
+                          {formatBdtBn(inv.amountBdt)}
+                        </p>
+                        {inv.paidAmountBdt > 0 && inv.paidAmountBdt < inv.amountBdt && (
+                          <p className="text-[10px] font-bold text-[#B47009] dark:text-amber-300">
+                            বাকি: {formatBdtBn(inv.amountBdt - inv.paidAmountBdt)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {inv.status !== 'Paid' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPayModal(inv);
+                            setPayMethod('bKash');
+                            setPayAmount(String(Math.max(1, inv.amountBdt - inv.paidAmountBdt)));
+                            setTxId('');
+                          }}
+                          className="inline-flex min-h-[36px] flex-1 items-center justify-center gap-1 rounded-xl bg-[#087F5B] px-2.5 text-xs font-bold text-white"
+                        >
+                          <CreditCard className="h-3.5 w-3.5" />
+                          পরিশোধ
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          downloadFeeReceiptPdf(inv);
+                          notify('ফি রশিদ পিডিএফ ডাউনলোড হয়েছে।', 'info');
+                        }}
+                        className="inline-flex min-h-[36px] flex-1 items-center justify-center gap-1 rounded-xl bg-[#21A9D6]/14 px-2.5 text-xs font-bold text-[#0E7DA3] dark:bg-cyan-500/20 dark:text-cyan-300"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        রশিদ
+                      </button>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteInvoice(inv)}
+                          aria-label="মুছে ফেলুন"
+                          className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-left text-xs sm:text-sm">
                 <thead className="bg-[#123B67] text-white dark:bg-slate-800">
                   <tr>
@@ -780,13 +878,13 @@ export const FeesModule: React.FC<Props> = ({ currentUser }) => {
           {/* Payment Modal */}
           {payModal && (
             <div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-[#091C2B]/65 p-4 backdrop-blur-xs"
+              className="fixed inset-0 z-50 flex items-end justify-center bg-[#091C2B]/65 p-0 backdrop-blur-xs sm:items-center sm:p-4"
               onClick={() => setPayModal(null)}
             >
               <form
                 onSubmit={handleRecordPayment}
                 onClick={(e) => e.stopPropagation()}
-                className="sheet-enter w-full max-w-md rounded-2xl border border-[#DCE8E1] bg-white p-6 shadow-2xl dark:border-slate-700 dark:bg-slate-900"
+                className="sheet-enter max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-3xl border border-[#DCE8E1] bg-white p-5 shadow-2xl sm:rounded-2xl sm:p-6 dark:border-slate-700 dark:bg-slate-900"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>

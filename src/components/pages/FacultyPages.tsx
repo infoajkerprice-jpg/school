@@ -60,11 +60,11 @@ const ProfileModal: React.FC<{ profile: ProfileModalData | null; onClose: () => 
   if (!profile) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[#091C2B]/65 p-4 backdrop-blur-xs"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-[#091C2B]/65 p-0 backdrop-blur-xs sm:items-center sm:p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+        className="sheet-enter max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white shadow-2xl sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between bg-gradient-to-r from-[#123B67] to-[#087F5B] px-5 py-4 text-white">
@@ -151,7 +151,7 @@ export const FacultyPage: React.FC = () => {
   }, [faculty, facultyDept, search]);
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-4 sm:space-y-7">
       <PageHeader
         breadcrumbs={[{ label: 'শিক্ষকমণ্ডলী পরিচিতি' }]}
         badge={`মোট শিক্ষক: ${toBnDigits(faculty.length)} জন`}
@@ -173,7 +173,7 @@ export const FacultyPage: React.FC = () => {
       {/* Search + Department Filter Bar */}
       <div className="space-y-3 rounded-2xl border border-[#D4E6DD] bg-white p-4 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="relative min-w-[230px] flex-1">
+          <div className="relative min-w-0 flex-1 sm:min-w-[230px]">
             <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[#647E8B]" />
             <input
               value={search}
@@ -188,13 +188,13 @@ export const FacultyPage: React.FC = () => {
         </div>
 
         {departments.length > 1 && (
-          <div className="flex flex-wrap gap-2 border-t border-[#EDF4F0] pt-3">
+          <div className="flex gap-1.5 overflow-x-auto border-t border-[#EDF4F0] pt-3 no-scrollbar sm:flex-wrap sm:gap-2">
             {departments.map((dept) => (
               <button
                 key={dept}
                 type="button"
                 onClick={() => setFacultyDept(dept)}
-                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
+                className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
                   facultyDept === dept
                     ? 'bg-[#087F5B] text-white shadow-xs'
                     : 'bg-[#F2F8F5] text-[#123B67] hover:bg-[#E1F2E8]'
@@ -385,7 +385,7 @@ export const TeacherDetailPage: React.FC = () => {
   const displayName = teacher.nameBn || teacher.name;
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-4 sm:space-y-7">
       <PageHeader
         breadcrumbs={[
           { label: 'শিক্ষকমণ্ডলী', to: '/faculty' },
@@ -449,7 +449,7 @@ export const TeacherDetailPage: React.FC = () => {
             </div>
 
             {/* 4 Colorful Metadata Cards */}
-            <div className="mt-6 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+            <div className="mt-5 grid grid-cols-1 gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-3.5">
               <div className="flex items-start gap-3 rounded-2xl border border-[#C5E8D8] bg-[#EDF9F4] p-4">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#087F5B] text-white">
                   <BookOpen className="h-5 w-5" />

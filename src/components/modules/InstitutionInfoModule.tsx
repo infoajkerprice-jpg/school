@@ -10,9 +10,16 @@ import {
 import { doc, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../../lib/firebase';
 import { clampStr } from '../../lib/grading';
+import {
+  MAX_BANNER_IMAGE_LEN,
+  MAX_LOGO_IMAGE_LEN,
+  MAX_PORTRAIT_IMAGE_LEN,
+  sanitizeImageUrlForFirestore,
+} from '../../lib/imageUpload';
 import { DEFAULT_SITE_SETTINGS, type SiteSettings } from '../../types';
 import { isLegacyRemovedImage } from '../../context/PublicDataContext';
 import { AdminModuleHeader } from '../AdminPagination';
+import { ImageUploadField } from '../ImageUploadField';
 import { useUIFeedback } from '../ToastContext';
 
 function isLegacyDemoSettings(data: Partial<SiteSettings>): boolean {
@@ -33,7 +40,7 @@ export function buildValidatedSiteSettingsPayload(settings: SiteSettings) {
     schoolNameBn: clampStr(settings.schoolNameBn || DEFAULT_SITE_SETTINGS.schoolNameBn, 180),
     schoolNameEn: clampStr(settings.schoolNameEn, 180),
     schoolSubtitleBn: clampStr(settings.schoolSubtitleBn, 180),
-    logoUrl: clampStr(settings.logoUrl, 500),
+    logoUrl: sanitizeImageUrlForFirestore(settings.logoUrl, MAX_LOGO_IMAGE_LEN),
     eiin: clampStr(settings.eiin, 30),
     schoolCode: clampStr(settings.schoolCode, 30),
     regNo: clampStr(settings.regNo, 40),
@@ -42,17 +49,17 @@ export function buildValidatedSiteSettingsPayload(settings: SiteSettings) {
     aboutText: clampStr(settings.aboutText, 4000),
     historyText: clampStr(settings.historyText, 4000),
     missionText: clampStr(settings.missionText, 4000),
-    aboutImageUrl: clampStr(
+    aboutImageUrl: sanitizeImageUrlForFirestore(
       isLegacyRemovedImage(settings.aboutImageUrl)
         ? DEFAULT_SITE_SETTINGS.aboutImageUrl
         : settings.aboutImageUrl,
-      500
+      MAX_BANNER_IMAGE_LEN
     ),
     principalName: clampStr(settings.principalName, 120),
     principalDesignation: clampStr(settings.principalDesignation, 120),
-    principalPhotoUrl: clampStr(
+    principalPhotoUrl: sanitizeImageUrlForFirestore(
       isLegacyRemovedImage(settings.principalPhotoUrl) ? '' : settings.principalPhotoUrl,
-      500
+      MAX_PORTRAIT_IMAGE_LEN
     ),
     principalMessage: clampStr(settings.principalMessage, 2500),
     tickerOverride: clampStr(settings.tickerOverride, 400),
@@ -286,14 +293,12 @@ export const InstitutionInfoModule: React.FC = () => {
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-xs font-bold text-[#263B35] dark:text-slate-300">
-                লোগো ছবির লিংক (URL)
-              </label>
-              <input
+              <ImageUploadField
+                label="প্রতিষ্ঠানের লোগো আপলোড (PNG / JPG)"
                 value={settings.logoUrl || ''}
-                onChange={(e) => setSettings({ ...settings, logoUrl: e.target.value })}
-                placeholder="https://... (খালি রাখলে ডিফল্ট মনোগ্রাম দেখাবে)"
-                className={inputClass}
+                onChange={(url) => setSettings({ ...settings, logoUrl: url })}
+                preset="logo"
+                helperText="স্বচ্ছ ব্যাকগ্রাউন্ডযুক্ত PNG লোগো আপলোড করলে ওয়েবসাইট, প্রবেশপত্র ও আইডি কার্ডে ব্যবহৃত হবে"
               />
             </div>
             <div>

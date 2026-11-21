@@ -24,6 +24,7 @@ import {
 import { usePublicData } from '../../context/PublicDataContext';
 import { db, handleFirestoreError, makeSafeDocId, OperationType } from '../../lib/firebase';
 import { clampStr } from '../../lib/grading';
+import { MAX_PORTRAIT_IMAGE_LEN, sanitizeImageUrlForFirestore } from '../../lib/imageUpload';
 import { downloadAdmissionAdmitCardPdf } from '../../lib/reports';
 import { ADMISSION_STATUS_BN, GENDER_BN, GROUP_BN, labelClass, SHIFT_BN } from '../../i18n';
 import {
@@ -32,6 +33,8 @@ import {
   BD_SHIFTS,
   type AdmissionApplication,
 } from '../../types';
+import { ImageUploadField } from '../ImageUploadField';
+import { MobileCardSlider } from '../MobileCardSlider';
 import { PageHeader } from '../PageHeader';
 import { useUIFeedback } from '../ToastContext';
 
@@ -40,7 +43,7 @@ interface AdmissionPageProps {
 }
 
 const INPUT_CLASS =
-  'w-full rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3.5 py-2.5 text-sm text-[#263B35] transition focus:border-[#087F5B] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#087F5B]/20';
+  'min-h-[44px] w-full rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3.5 py-2.5 text-sm text-[#263B35] transition focus:border-[#087F5B] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#087F5B]/20';
 
 const STATUS_BADGE: Record<string, string> = {
   Approved: 'bg-[#EDF9F4] text-[#087F5B] border border-[#C5E8D8]',
@@ -104,7 +107,7 @@ export const AdmissionPage: React.FC<AdmissionPageProps> = ({ authUid }) => {
         fatherName: clampStr(form.fatherName, 120),
         motherName: clampStr(form.motherName, 120),
         birthRegNo: clampStr(form.birthRegNo, 40),
-        photoUrl: clampStr(form.photoUrl, 500),
+        photoUrl: sanitizeImageUrlForFirestore(form.photoUrl, MAX_PORTRAIT_IMAGE_LEN),
         applyingClass: form.applyingClass,
         shift: form.shift,
         group: form.group,
@@ -187,7 +190,7 @@ export const AdmissionPage: React.FC<AdmissionPageProps> = ({ authUid }) => {
   ];
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-4 sm:space-y-7">
       <PageHeader
         breadcrumbs={[{ label: 'অনলাইন ভর্তি আবেদন' }]}
         badge={`ভর্তি চলছে · প্লে গ্রুপ – ${settings.highestClass || 'অষ্টম শ্রেণি'}`}
@@ -208,8 +211,82 @@ export const AdmissionPage: React.FC<AdmissionPageProps> = ({ authUid }) => {
         }
       />
 
-      {/* Institutional Admission Summary (3 Distinct Brand Accents) */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {/* Institutional Admission Summary: Single-Card Auto Slider on Mobile, 3-Col Grid on Desktop */}
+      <div className="md:hidden">
+        <MobileCardSlider
+          items={[
+            {
+              key: 'mediums',
+              content: (
+                <div className="h-full rounded-2xl border border-[#C5E8D8] bg-white p-5 shadow-xs">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EDF9F4] text-[#087F5B]">
+                      <Languages className="h-4 w-4" />
+                    </span>
+                    <h2 className="text-sm font-extrabold text-[#123B67]">শিক্ষার মাধ্যম</h2>
+                  </div>
+                  <ul className="mt-3 space-y-1.5 text-xs font-medium text-[#263B35]">
+                    {educationMediums.map((m) => (
+                      <li key={m} className="flex items-start gap-1.5">
+                        <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#087F5B]" />
+                        <span>{m}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ),
+            },
+            {
+              key: 'shifts',
+              content: (
+                <div className="h-full rounded-2xl border border-[#C8DDF2] bg-white p-5 shadow-xs">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EDF4FB] text-[#123B67]">
+                      <Clock className="h-4 w-4" />
+                    </span>
+                    <h2 className="text-sm font-extrabold text-[#123B67]">শ্রেণি ও শিফট</h2>
+                  </div>
+                  <div className="mt-3 space-y-2 text-xs text-[#263B35]">
+                    <p className="rounded-lg bg-[#F2F8F5] px-3 py-2">
+                      <strong className="text-[#123B67]">শ্রেণি:</strong> প্লে গ্রুপ থেকে{' '}
+                      {settings.highestClass || 'অষ্টম শ্রেণি'}
+                    </p>
+                    <p className="rounded-lg bg-[#FFF8EA] px-3 py-2">
+                      <strong className="text-[#A66300]">শিফট:</strong> {shifts.join(' ও ')}
+                    </p>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              key: 'islamic',
+              content: (
+                <div className="h-full rounded-2xl border border-[#DDD1F5] bg-white p-5 shadow-xs">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#F5F0FF] text-[#805AD5]">
+                      <Sparkles className="h-4 w-4" />
+                    </span>
+                    <h2 className="text-sm font-extrabold text-[#123B67]">
+                      ইসলামিক শিক্ষা কার্যক্রম
+                    </h2>
+                  </div>
+                  <p className="mt-3 text-xs leading-relaxed text-[#4C6470]">
+                    {specialPrograms.join(' · ')}
+                  </p>
+                </div>
+              ),
+            },
+          ]}
+          getKey={(c) => c.key}
+          ariaLabel="ভর্তি সারসংক্ষেপ স্লাইডার"
+          intervalMs={3000}
+          transitionMs={500}
+          dotTheme="green"
+          renderItem={(c) => c.content}
+        />
+      </div>
+
+      <div className="hidden gap-4 md:grid md:grid-cols-3">
         <div className="rounded-2xl border border-[#C5E8D8] bg-white p-5 shadow-xs">
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EDF9F4] text-[#087F5B]">
@@ -257,10 +334,35 @@ export const AdmissionPage: React.FC<AdmissionPageProps> = ({ authUid }) => {
         </div>
       </div>
 
-      {/* 3-Step Admission Guidelines */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {/* 3-Step Admission Guidelines: Single-Card Auto Slider on Mobile, 3-Col Grid on Desktop */}
+      <div className="md:hidden">
+        <MobileCardSlider
+          items={steps}
+          getKey={(item) => item.step}
+          ariaLabel="ভর্তি আবেদনের ৩টি ধাপ স্লাইডার"
+          intervalMs={3000}
+          transitionMs={500}
+          dotTheme="navy"
+          renderItem={(item) => (
+            <div className={`h-full rounded-2xl border p-5 shadow-xs ${item.border}`}>
+              <span
+                className={`inline-block rounded-lg px-2.5 py-1 text-[11px] font-extrabold ${item.badge}`}
+              >
+                {item.step}
+              </span>
+              <h2 className="mt-2.5 text-[15px] font-extrabold text-[#123B67]">{item.title}</h2>
+              <p className="mt-1.5 text-xs leading-relaxed text-[#3D5562]">{item.text}</p>
+            </div>
+          )}
+        />
+      </div>
+
+      <div className="hidden gap-4 md:grid md:grid-cols-3">
         {steps.map((item) => (
-          <div key={item.step} className={`rounded-2xl border p-5 shadow-2xs ${item.border}`}>
+          <div
+            key={item.step}
+            className={`rounded-2xl border p-5 shadow-2xs ${item.border}`}
+          >
             <span className={`inline-block rounded-lg px-2.5 py-1 text-[11px] font-extrabold ${item.badge}`}>
               {item.step}
             </span>
@@ -432,6 +534,7 @@ export const AdmissionPage: React.FC<AdmissionPageProps> = ({ authUid }) => {
                 <label className="mb-1.5 block text-xs font-bold text-[#263B35]">জন্মনিবন্ধন নম্বর *</label>
                 <input
                   required
+                  inputMode="numeric"
                   value={form.birthRegNo}
                   onChange={(e) => setForm({ ...form, birthRegNo: e.target.value })}
                   placeholder="১৭ সংখ্যার জন্মনিবন্ধন নম্বর"
@@ -466,6 +569,8 @@ export const AdmissionPage: React.FC<AdmissionPageProps> = ({ authUid }) => {
                 <label className="mb-1.5 block text-xs font-bold text-[#263B35]">অভিভাবকের মোবাইল নম্বর *</label>
                 <input
                   required
+                  type="tel"
+                  inputMode="tel"
                   value={form.guardianPhone}
                   onChange={(e) => setForm({ ...form, guardianPhone: e.target.value })}
                   placeholder="+880 17XX-XXXXXX"
@@ -481,13 +586,13 @@ export const AdmissionPage: React.FC<AdmissionPageProps> = ({ authUid }) => {
                   className={INPUT_CLASS}
                 />
               </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-bold text-[#263B35]">শিক্ষার্থীর ছবির লিংক (ঐচ্ছিক)</label>
-                <input
+              <div className="sm:col-span-2">
+                <ImageUploadField
+                  label="শিক্ষার্থীর ছবি আপলোড (মোবাইল ক্যামেরা / গ্যালারি বা কম্পিউটার)"
                   value={form.photoUrl}
-                  onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
-                  placeholder="https://..."
-                  className={INPUT_CLASS}
+                  onChange={(url) => setForm({ ...form, photoUrl: url })}
+                  preset="portrait"
+                  helperText="পাসপোর্ট সাইজের স্পষ্ট ছবি আপলোড করুন (ঐচ্ছিক)"
                 />
               </div>
               <div className="sm:col-span-2">

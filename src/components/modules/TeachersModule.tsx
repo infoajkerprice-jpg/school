@@ -11,6 +11,7 @@ import {
 } from 'firebase/firestore';
 import { db, handleFirestoreError, makeSafeDocId, OperationType } from '../../lib/firebase';
 import { clampStr } from '../../lib/grading';
+import { MAX_PORTRAIT_IMAGE_LEN, sanitizeImageUrlForFirestore } from '../../lib/imageUpload';
 import {
   compareFacultyHierarchy,
   PDF_TEACHERS_ROSTER,
@@ -21,6 +22,7 @@ import { downloadTeachersPdf, exportToExcel } from '../../lib/reports';
 import { formatBdtBn, SHIFT_BN, TEACHER_STATUS_BN, toBnDigits } from '../../i18n';
 import type { FacultyPublic, TeacherHRRecord, UserAccount } from '../../types';
 import { AdminModuleHeader, AdminPagination } from '../AdminPagination';
+import { ImageUploadField } from '../ImageUploadField';
 import { useUIFeedback } from '../ToastContext';
 
 interface Props {
@@ -220,7 +222,7 @@ export const TeachersModule: React.FC<Props> = ({ currentUser }) => {
         qualification: clampStr(form.qualification, 140),
         responsibility: clampStr(form.responsibility, 160),
         bio: clampStr(form.bio, 600),
-        photoUrl: clampStr(form.photoUrl, 500),
+        photoUrl: sanitizeImageUrlForFirestore(form.photoUrl, MAX_PORTRAIT_IMAGE_LEN),
         experienceYears: Math.max(0, Math.min(60, Number(form.experienceYears) || 0)),
         shift: form.shift,
         status: form.status,
@@ -442,9 +444,13 @@ export const TeachersModule: React.FC<Props> = ({ currentUser }) => {
                 ))}
               </select>
             </div>
-            <div className="sm:col-span-2">
-              <label className="mb-1 block text-xs font-bold text-[#263B35] dark:text-slate-300">ছবির লিংক (ঐচ্ছিক)</label>
-              <input value={form.photoUrl} onChange={(e) => setForm({ ...form, photoUrl: e.target.value })} className={INPUT_CLS} />
+            <div className="sm:col-span-2 lg:col-span-4">
+              <ImageUploadField
+                label="শিক্ষকের ছবি (কম্পিউটার বা মোবাইল থেকে আপলোড করুন)"
+                value={form.photoUrl}
+                onChange={(url) => setForm({ ...form, photoUrl: url })}
+                preset="portrait"
+              />
             </div>
             <div className="sm:col-span-2 lg:col-span-4">
               <label className="mb-1 block text-xs font-bold text-[#263B35] dark:text-slate-300">সংক্ষিপ্ত পরিচিতি</label>
@@ -471,8 +477,8 @@ export const TeachersModule: React.FC<Props> = ({ currentUser }) => {
       )}
 
       {/* Search & Department Filter */}
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#DCE8E1] bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="relative min-w-[220px] flex-1">
+      <div className="flex flex-col gap-2.5 rounded-2xl border border-[#DCE8E1] bg-white p-3.5 shadow-2xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 dark:border-slate-800 dark:bg-slate-900">
+        <div className="relative min-w-0 flex-1 sm:min-w-[220px]">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[#647E8B]" />
           <input
             value={search}
@@ -484,7 +490,7 @@ export const TeachersModule: React.FC<Props> = ({ currentUser }) => {
         <select
           value={deptFilter}
           onChange={(e) => setDeptFilter(e.target.value)}
-          className="rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3 py-2 text-xs font-bold text-[#123B67] sm:text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          className="w-full rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3 py-2 text-xs font-bold text-[#123B67] sm:w-auto sm:text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
         >
           {departments.map((d) => (
             <option key={d} value={d}>{d === 'সকল' ? 'সকল বিভাগ' : d}</option>
@@ -492,9 +498,96 @@ export const TeachersModule: React.FC<Props> = ({ currentUser }) => {
         </select>
       </div>
 
-      {/* Table + Pagination */}
+      {/* Mobile Cards (< md) + Desktop Table (md+) */}
       <div className="overflow-hidden rounded-2xl border border-[#DCE8E1] bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="overflow-x-auto">
+        <div className="divide-y divide-[#EAF2ED] md:hidden dark:divide-slate-800">
+          {paged.length === 0 ? (
+            <p className="px-4 py-10 text-center text-xs text-[#587064] dark:text-slate-400">
+              কোনো শিক্ষকের তথ্য পাওয়া যায়নি।
+            </p>
+          ) : (
+            paged.map((f) => {
+              const hr = hrByFaculty.get(f.id);
+              return (
+                <div key={f.id} className="space-y-2.5 p-3.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-extrabold text-[#123B67] dark:text-white">
+                        {f.nameBn || f.name}
+                      </p>
+                      <p className="text-[11px] font-bold text-[#087F5B] dark:text-emerald-400">
+                        {f.designation}
+                      </p>
+                      {hr?.employeeId && (
+                        <p className="text-[10px] font-semibold text-[#647E8B] tabular-nums dark:text-slate-400">
+                          আইডি: {hr.employeeId}
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-bold ${
+                        f.status === 'Active'
+                          ? 'bg-[#EDF9F4] text-[#087F5B] dark:bg-emerald-500/20 dark:text-emerald-300'
+                          : f.status === 'OnLeave'
+                          ? 'bg-[#FFF8EA] text-[#A66300] dark:bg-amber-500/20 dark:text-amber-300'
+                          : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                      }`}
+                    >
+                      {TEACHER_STATUS_BN[f.status] || f.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 rounded-xl bg-[#F5F9F7] px-3 py-2 text-[11px] dark:bg-slate-800/70">
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-[#5A7380] dark:text-slate-400">বিভাগ ও বিষয়</p>
+                      <p className="truncate font-bold text-[#123B67] dark:text-slate-100">
+                        {f.department} · {f.subject}
+                      </p>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-[#5A7380] dark:text-slate-400">
+                        {isAdmin ? 'ফোন / বেতন' : 'শিফট'}
+                      </p>
+                      {isAdmin ? (
+                        <p className="truncate font-bold text-[#087F5B] tabular-nums dark:text-emerald-400">
+                          {hr?.phone || '—'}
+                          {hr && hr.salaryBdt > 0 ? ` · ${formatBdtBn(hr.salaryBdt)}` : ''}
+                        </p>
+                      ) : (
+                        <p className="truncate font-bold text-[#123B67] dark:text-slate-100">
+                          {SHIFT_BN[f.shift]}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {isAdmin && (
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(f)}
+                        className="inline-flex min-h-[36px] items-center gap-1 rounded-xl bg-[#EDF9F4] px-3 text-xs font-bold text-[#087F5B] dark:bg-emerald-500/20 dark:text-emerald-300"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        সম্পাদনা
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleDelete(f)}
+                        className="inline-flex min-h-[36px] items-center gap-1 rounded-xl bg-rose-50 px-3 text-xs font-bold text-rose-600 dark:bg-rose-500/20 dark:text-rose-300"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        মুছুন
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[700px] text-left text-xs sm:text-sm">
             <thead className="bg-gradient-to-r from-[#123B67] to-[#087F5B] text-white">
               <tr>

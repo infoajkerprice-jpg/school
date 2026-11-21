@@ -16,6 +16,7 @@ import {
 import { usePublicData } from '../../context/PublicDataContext';
 import { labelClass, toBnDigits } from '../../i18n';
 import { BD_CLASSES } from '../../types';
+import { MobileCardSlider } from '../MobileCardSlider';
 import { EmptyState, PageHeader, PageSkeleton } from '../PageHeader';
 import { useUIFeedback } from '../ToastContext';
 
@@ -56,7 +57,7 @@ export const StudentsAchievementsPage: React.FC = () => {
   );
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-4 sm:space-y-7">
       <PageHeader
         breadcrumbs={[{ label: 'শিক্ষার্থী ও অর্জন' }]}
         badge={`কৃতি শিক্ষার্থী: ${toBnDigits(achievements.length)} জন`}
@@ -75,8 +76,69 @@ export const StudentsAchievementsPage: React.FC = () => {
         }
       />
 
-      {/* Quick Summary Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {/* Quick Summary Stats: Single-Card Slider on Mobile, 3-Col Grid on Tablet/Desktop */}
+      <div className="sm:hidden">
+        <MobileCardSlider
+          items={[
+            {
+              key: 'total',
+              content: (
+                <div className="flex items-center gap-3.5 rounded-2xl border border-[#F8DFAF] bg-gradient-to-r from-[#FFF8EA] to-white p-4 shadow-2xs">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F4A62A] text-[#123B67]">
+                    <Trophy className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="text-xs font-semibold text-[#526B78]">মোট তালিকাভুক্ত অর্জন</p>
+                    <p className="text-xl font-extrabold text-[#123B67] tabular-nums">
+                      {toBnDigits(achievements.length)} জন
+                    </p>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              key: 'classes',
+              content: (
+                <div className="flex items-center gap-3.5 rounded-2xl border border-[#C5E8D8] bg-gradient-to-r from-[#EDF9F4] to-white p-4 shadow-2xs">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#087F5B] text-white">
+                    <GraduationCap className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="text-xs font-semibold text-[#526B78]">অংশগ্রহণকারী শ্রেণি</p>
+                    <p className="text-xl font-extrabold text-[#087F5B] tabular-nums">
+                      {toBnDigits(representedClassesCount)} টি শ্রেণি
+                    </p>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              key: 'categories',
+              content: (
+                <div className="flex items-center gap-3.5 rounded-2xl border border-[#DDD1F5] bg-gradient-to-r from-[#F5F0FF] to-white p-4 shadow-2xs">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#805AD5] text-white">
+                    <Sparkles className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="text-xs font-semibold text-[#526B78]">সম্মাননা ক্যাটাগরি</p>
+                    <p className="text-base font-extrabold text-[#805AD5]">
+                      মেধা, হিফজ ও সহ-শিক্ষা
+                    </p>
+                  </div>
+                </div>
+              ),
+            },
+          ]}
+          getKey={(s) => s.key}
+          ariaLabel="অর্জনের সারসংক্ষেপ স্লাইডার"
+          intervalMs={3000}
+          transitionMs={500}
+          dotTheme="orange"
+          renderItem={(s) => s.content}
+        />
+      </div>
+
+      <div className="hidden gap-4 sm:grid sm:grid-cols-3">
         <div className="flex items-center gap-3.5 rounded-2xl border border-[#F8DFAF] bg-gradient-to-r from-[#FFF8EA] to-white p-4 shadow-2xs">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F4A62A] text-[#123B67]">
             <Trophy className="h-5 w-5" />
@@ -111,20 +173,20 @@ export const StudentsAchievementsPage: React.FC = () => {
       </div>
 
       {/* Search & Class Filter */}
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#D4E6DD] bg-white p-4 shadow-xs">
-        <div className="relative min-w-[220px] flex-1">
+      <div className="flex flex-col gap-2.5 rounded-2xl border border-[#D4E6DD] bg-white p-3.5 shadow-xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:p-4">
+        <div className="relative flex-1 sm:min-w-[220px]">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[#647E8B]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="শিক্ষার্থীর নাম, রোল বা অর্জনের শিরোনাম খুঁজুন..."
-            className="w-full rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] py-2.5 pr-3.5 pl-10 text-sm text-[#263B35] focus:border-[#087F5B] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#087F5B]/20"
+            className="min-h-[44px] w-full rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] py-2.5 pr-3.5 pl-10 text-sm text-[#263B35] focus:border-[#087F5B] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#087F5B]/20"
           />
         </div>
         <select
           value={classFilter}
           onChange={(e) => setClassFilter(e.target.value)}
-          className="rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3.5 py-2.5 text-sm font-bold text-[#123B67] focus:border-[#087F5B] focus:outline-none"
+          className="min-h-[44px] w-full rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3.5 py-2.5 text-sm font-bold text-[#123B67] focus:border-[#087F5B] focus:outline-none sm:w-auto"
         >
           <option value="সকল">সকল শ্রেণি</option>
           {BD_CLASSES.map((c) => (
@@ -270,7 +332,7 @@ export const StudentAchievementDetailPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-4 sm:space-y-7">
       <PageHeader
         breadcrumbs={[
           { label: 'শিক্ষার্থী ও অর্জন', to: '/students' },
@@ -331,23 +393,23 @@ export const StudentAchievementDetailPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 gap-3.5 sm:grid-cols-3">
-              <div className="rounded-2xl border border-[#C5E8D8] bg-[#EDF9F4] p-4">
-                <GraduationCap className="h-5 w-5 text-[#087F5B]" />
-                <p className="mt-2 text-[11px] font-bold text-[#087F5B]">শ্রেণি</p>
-                <p className="text-base font-extrabold text-[#123B67]">{labelClass(item.className)}</p>
+            <div className="mt-5 grid grid-cols-3 gap-2 sm:mt-6 sm:gap-3.5">
+              <div className="rounded-xl border border-[#C5E8D8] bg-[#EDF9F4] p-3 sm:rounded-2xl sm:p-4">
+                <GraduationCap className="h-4 w-4 text-[#087F5B] sm:h-5 sm:w-5" />
+                <p className="mt-1.5 text-[10px] font-bold text-[#087F5B] sm:mt-2 sm:text-[11px]">শ্রেণি</p>
+                <p className="truncate text-xs font-extrabold text-[#123B67] sm:text-base">{labelClass(item.className)}</p>
               </div>
-              <div className="rounded-2xl border border-[#C8DDF2] bg-[#EDF4FB] p-4">
-                <Hash className="h-5 w-5 text-[#123B67]" />
-                <p className="mt-2 text-[11px] font-bold text-[#123B67]">রোল নম্বর</p>
-                <p className="text-base font-extrabold text-[#123B67] tabular-nums">
+              <div className="rounded-xl border border-[#C8DDF2] bg-[#EDF4FB] p-3 sm:rounded-2xl sm:p-4">
+                <Hash className="h-4 w-4 text-[#123B67] sm:h-5 sm:w-5" />
+                <p className="mt-1.5 text-[10px] font-bold text-[#123B67] sm:mt-2 sm:text-[11px]">রোল নং</p>
+                <p className="text-xs font-extrabold text-[#123B67] tabular-nums sm:text-base">
                   {toBnDigits(item.rollNumber)}
                 </p>
               </div>
-              <div className="rounded-2xl border border-[#DDD1F5] bg-[#F5F0FF] p-4">
-                <Calendar className="h-5 w-5 text-[#805AD5]" />
-                <p className="mt-2 text-[11px] font-bold text-[#805AD5]">শিক্ষাবর্ষ</p>
-                <p className="text-base font-extrabold text-[#123B67] tabular-nums">
+              <div className="rounded-xl border border-[#DDD1F5] bg-[#F5F0FF] p-3 sm:rounded-2xl sm:p-4">
+                <Calendar className="h-4 w-4 text-[#805AD5] sm:h-5 sm:w-5" />
+                <p className="mt-1.5 text-[10px] font-bold text-[#805AD5] sm:mt-2 sm:text-[11px]">শিক্ষাবর্ষ</p>
+                <p className="text-xs font-extrabold text-[#123B67] tabular-nums sm:text-base">
                   {toBnDigits(item.academicYear || '২০২৫')}
                 </p>
               </div>

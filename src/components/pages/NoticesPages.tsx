@@ -41,7 +41,7 @@ export const NoticesPage: React.FC = () => {
   }, [notices, category, search]);
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-4 sm:space-y-7">
       <PageHeader
         breadcrumbs={[{ label: 'নোটিশ বোর্ড' }]}
         badge={`মোট বিজ্ঞপ্তি: ${toBnDigits(notices.length)} টি`}
@@ -67,7 +67,7 @@ export const NoticesPage: React.FC = () => {
           </span>
         </div>
 
-        <div className="flex flex-wrap gap-1.5 border-t border-[#EDF4F0] pt-3">
+        <div className="flex gap-1.5 overflow-x-auto border-t border-[#EDF4F0] pt-3 no-scrollbar sm:flex-wrap">
           {Object.entries(NOTICE_CATEGORY_BN).map(([k, v]) => {
             const active = category === k;
             return (
@@ -75,7 +75,7 @@ export const NoticesPage: React.FC = () => {
                 key={k}
                 type="button"
                 onClick={() => setCategory(k)}
-                className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
+                className={`shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
                   active
                     ? k === 'Urgent'
                       ? 'bg-[#F4A62A] text-[#123B67] shadow-2xs'
@@ -154,10 +154,10 @@ export const NoticesPage: React.FC = () => {
                     {n.contentBn || n.content}
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:shrink-0 sm:items-center">
                   <Link
                     to={`/notices/${n.id}`}
-                    className="inline-flex items-center gap-1 rounded-xl bg-[#087F5B] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#06684A]"
+                    className="inline-flex min-h-[40px] items-center justify-center gap-1 rounded-xl bg-[#087F5B] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-[#06684A] sm:px-4 sm:py-2.5"
                   >
                     বিস্তারিত পড়ুন
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -168,7 +168,7 @@ export const NoticesPage: React.FC = () => {
                       downloadNoticePdf(n);
                       notify('নোটিশ পিডিএফ ডাউনলোড শুরু হয়েছে।', 'success');
                     }}
-                    className="inline-flex items-center gap-1 rounded-xl border border-[#CBE0D6] bg-white px-3.5 py-2.5 text-xs font-bold text-[#123B67] transition hover:bg-[#EAF2FA]"
+                    className="inline-flex min-h-[40px] items-center justify-center gap-1 rounded-xl border border-[#CBE0D6] bg-white px-3.5 py-2 text-xs font-bold text-[#123B67] transition hover:bg-[#EAF2FA] sm:py-2.5"
                   >
                     <Download className="h-3.5 w-3.5 text-[#087F5B]" />
                     পিডিএফ
@@ -237,7 +237,7 @@ export const NoticeDetailPage: React.FC = () => {
   const title = notice.titleBn || notice.title;
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-4 sm:space-y-7">
       <PageHeader
         breadcrumbs={[
           { label: 'নোটিশ বোর্ড', to: '/notices' },

@@ -473,8 +473,8 @@ export const ResultsModule: React.FC<Props> = ({ currentUser }) => {
       )}
 
       {/* Search & Filter Toolbar */}
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#DCE8E1] bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="relative min-w-[220px] flex-1">
+      <div className="grid grid-cols-2 gap-2.5 rounded-2xl border border-[#DCE8E1] bg-white p-3.5 shadow-2xs sm:flex sm:flex-wrap sm:items-center sm:gap-3 dark:border-slate-800 dark:bg-slate-900">
+        <div className="relative col-span-2 min-w-0 sm:min-w-[220px] sm:flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[#647B86] dark:text-slate-400" />
           <input
             value={searchTerm}
@@ -506,9 +506,105 @@ export const ResultsModule: React.FC<Props> = ({ currentUser }) => {
         </select>
       </div>
 
-      {/* Results Table */}
+      {/* Results Mobile Cards (< md) + Desktop Table (md+) */}
       <div className="overflow-hidden rounded-2xl border border-[#DCE8E1] bg-white shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="overflow-x-auto">
+        <div className="divide-y divide-[#EAF2ED] md:hidden dark:divide-slate-800">
+          {paginatedResults.length === 0 ? (
+            <p className="px-4 py-10 text-center text-xs text-[#587064] dark:text-slate-400">
+              কোনো পরীক্ষার ফলাফল পাওয়া যায়নি।
+            </p>
+          ) : (
+            paginatedResults.map((r) => (
+              <div key={r.id} className="space-y-2.5 p-3.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-extrabold text-[#123B67] dark:text-white">
+                      {r.studentName}
+                    </p>
+                    <p className="text-[11px] font-semibold text-[#526B78] tabular-nums dark:text-slate-400">
+                      {labelClass(r.className)} ({labelSection(r.section)}) · রোল {toBnDigits(r.studentRoll)}
+                    </p>
+                    <p className="text-[10.5px] text-[#5A7380] dark:text-slate-400">
+                      {r.examName} ({toBnDigits(r.academicYear)})
+                    </p>
+                  </div>
+                  {isAdmin ? (
+                    <button
+                      type="button"
+                      onClick={() => togglePublish(r)}
+                      className={`shrink-0 rounded-lg px-2 py-1 text-[10.5px] font-bold ${
+                        r.status === 'Published'
+                          ? 'bg-[#087F5B]/12 text-[#087F5B] dark:bg-emerald-500/20 dark:text-emerald-300'
+                          : 'bg-[#F4A62A]/20 text-[#9A5B00] dark:bg-amber-500/20 dark:text-amber-300'
+                      }`}
+                    >
+                      {RESULT_STATUS_BN[r.status]}
+                    </button>
+                  ) : (
+                    <span className="shrink-0 rounded-lg bg-[#087F5B]/12 px-2 py-1 text-[10.5px] font-bold text-[#087F5B]">
+                      {RESULT_STATUS_BN[r.status]}
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 rounded-xl bg-[#F5F9F7] p-2 text-center text-[11px] tabular-nums dark:bg-slate-800/70">
+                  <div>
+                    <p className="text-[9.5px] text-[#5A7380] dark:text-slate-400">মোট নম্বর</p>
+                    <p className="font-extrabold text-[#123B67] dark:text-white">{toBnDigits(r.totalMarks)}</p>
+                  </div>
+                  <div className="border-x border-[#DCE8E1] dark:border-slate-700">
+                    <p className="text-[9.5px] text-[#5A7380] dark:text-slate-400">জিপিএ ও গ্রেড</p>
+                    <p className="font-extrabold text-[#087F5B] dark:text-emerald-400">
+                      {toBnDigits(r.gpa.toFixed(2))} ({r.grade})
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[9.5px] text-[#5A7380] dark:text-slate-400">মেধাক্রম</p>
+                    <p className="font-extrabold text-[#805AD5] dark:text-purple-300">
+                      {r.meritPosition || '—'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewResult(r)}
+                    className="inline-flex min-h-[36px] flex-1 items-center justify-center gap-1 rounded-xl bg-[#21A9D6]/14 px-2.5 text-xs font-bold text-[#0E7DA3] dark:bg-cyan-500/20 dark:text-cyan-300"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    প্রিভিউ
+                  </button>
+                  <button
+                    type="button"
+                    disabled={downloadingId === r.id}
+                    onClick={() => handleDownloadPdf(r)}
+                    className="inline-flex min-h-[36px] flex-1 items-center justify-center gap-1 rounded-xl bg-[#087F5B] px-2.5 text-xs font-bold text-white disabled:opacity-60"
+                  >
+                    {downloadingId === r.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Download className="h-3.5 w-3.5" />
+                    )}
+                    মার্কশিট
+                  </button>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(r)}
+                      aria-label="মুছে ফেলুন"
+                      className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-left text-xs sm:text-sm">
             <thead className="bg-[#123B67] text-white dark:bg-slate-800">
               <tr>

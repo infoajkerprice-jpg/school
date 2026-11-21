@@ -221,45 +221,45 @@ export const AdmissionsModule: React.FC = () => {
       />
 
       {/* Quick KPI Strip */}
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
-        <div className="flex items-center gap-3 rounded-2xl border border-[#DCE8E1] bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#123B67]/12 text-[#123B67] dark:bg-sky-500/20 dark:text-sky-300">
-            <UserPlus className="h-5 w-5" />
+      <div className="grid grid-cols-3 gap-2 sm:gap-3.5">
+        <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-[#DCE8E1] bg-white p-2.5 text-center shadow-2xs sm:flex-row sm:gap-3 sm:p-4 sm:text-left dark:border-slate-800 dark:bg-slate-900">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#123B67]/12 text-[#123B67] sm:h-10 sm:w-10 dark:bg-sky-500/20 dark:text-sky-300">
+            <UserPlus className="h-4 w-4 sm:h-5 sm:w-5" />
           </span>
-          <div>
-            <p className="text-xs font-medium text-[#526B78] dark:text-slate-400">মোট আবেদন</p>
-            <p className="text-xl font-extrabold text-[#123B67] tabular-nums dark:text-white">
-              {toBnDigits(applications.length)} টি
+          <div className="min-w-0">
+            <p className="truncate text-[10px] font-medium text-[#526B78] sm:text-xs dark:text-slate-400">মোট আবেদন</p>
+            <p className="text-base font-extrabold text-[#123B67] tabular-nums sm:text-xl dark:text-white">
+              {toBnDigits(applications.length)} <span className="hidden sm:inline">টি</span>
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-2xl border border-[#DCE8E1] bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F4A62A]/18 text-[#B47009] dark:bg-amber-500/20 dark:text-amber-300">
-            <Clock className="h-5 w-5" />
+        <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-[#DCE8E1] bg-white p-2.5 text-center shadow-2xs sm:flex-row sm:gap-3 sm:p-4 sm:text-left dark:border-slate-800 dark:bg-slate-900">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#F4A62A]/18 text-[#B47009] sm:h-10 sm:w-10 dark:bg-amber-500/20 dark:text-amber-300">
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
           </span>
-          <div>
-            <p className="text-xs font-medium text-[#526B78] dark:text-slate-400">অপেক্ষমাণ / পর্যালোচনা</p>
-            <p className="text-xl font-extrabold text-[#A66300] tabular-nums dark:text-amber-300">
-              {toBnDigits(pendingCount)} টি
+          <div className="min-w-0">
+            <p className="truncate text-[10px] font-medium text-[#526B78] sm:text-xs dark:text-slate-400">অপেক্ষমাণ</p>
+            <p className="text-base font-extrabold text-[#A66300] tabular-nums sm:text-xl dark:text-amber-300">
+              {toBnDigits(pendingCount)} <span className="hidden sm:inline">টি</span>
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-2xl border border-[#DCE8E1] bg-white p-4 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#087F5B]/12 text-[#087F5B] dark:bg-emerald-500/20 dark:text-emerald-300">
-            <UserCheck className="h-5 w-5" />
+        <div className="flex flex-col items-center gap-1.5 rounded-2xl border border-[#DCE8E1] bg-white p-2.5 text-center shadow-2xs sm:flex-row sm:gap-3 sm:p-4 sm:text-left dark:border-slate-800 dark:bg-slate-900">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#087F5B]/12 text-[#087F5B] sm:h-10 sm:w-10 dark:bg-emerald-500/20 dark:text-emerald-300">
+            <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
           </span>
-          <div>
-            <p className="text-xs font-medium text-[#526B78] dark:text-slate-400">অনুমোদিত ভর্তি</p>
-            <p className="text-xl font-extrabold text-[#087F5B] tabular-nums dark:text-emerald-400">
-              {toBnDigits(approvedCount)} টি
+          <div className="min-w-0">
+            <p className="truncate text-[10px] font-medium text-[#526B78] sm:text-xs dark:text-slate-400">অনুমোদিত</p>
+            <p className="text-base font-extrabold text-[#087F5B] tabular-nums sm:text-xl dark:text-emerald-400">
+              {toBnDigits(approvedCount)} <span className="hidden sm:inline">টি</span>
             </p>
           </div>
         </div>
       </div>
 
       {/* Search & Status Filter */}
-      <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#DCE8E1] bg-white p-3.5 shadow-2xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="relative min-w-[220px] flex-1">
+      <div className="flex flex-col gap-2.5 rounded-2xl border border-[#DCE8E1] bg-white p-3.5 shadow-2xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 dark:border-slate-800 dark:bg-slate-900">
+        <div className="relative min-w-0 flex-1 sm:min-w-[220px]">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-[#647E8B]" />
           <input
             value={search}
@@ -271,7 +271,7 @@ export const AdmissionsModule: React.FC = () => {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3.5 py-2 text-xs font-bold text-[#123B67] sm:text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+          className="w-full rounded-xl border border-[#CFE0D6] bg-[#F8FBF9] px-3.5 py-2 text-xs font-bold text-[#123B67] sm:w-auto sm:text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
         >
           <option value="সকল">সকল অবস্থা</option>
           {Object.entries(ADMISSION_STATUS_BN).map(([k, v]) => (
@@ -289,8 +289,8 @@ export const AdmissionsModule: React.FC = () => {
         <div className="overflow-hidden rounded-2xl border border-[#DCE8E1] bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
           <div className="divide-y divide-[#EAF2ED] dark:divide-slate-800">
             {paged.map((app) => (
-              <div key={app.id} className="p-5 transition hover:bg-[#FAFDFB] dark:hover:bg-slate-800/40">
-                <div className="flex flex-wrap items-start justify-between gap-4">
+              <div key={app.id} className="p-3.5 transition hover:bg-[#FAFDFB] sm:p-5 dark:hover:bg-slate-800/40">
+                <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
                   <div className="space-y-1.5">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-lg bg-[#123B67] px-2.5 py-0.5 font-mono text-xs font-bold text-white">
